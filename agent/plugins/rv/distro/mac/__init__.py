@@ -27,18 +27,25 @@ class PkgInstaller():
         self.plist = PlistInterface()
 
     # Uses installer tool to install pkgs
-    def installer(self, pkg):
+    def installer(self, pkg, proc_niceness):
 
-        installer_cmd = [self.installer_cmd,
-                         '-pkg', '%s' % pkg,
-                         '-target', '/']
+        installer_cmd = [
+            'nice',
+            '-n',
+            CpuPriority.niceness_to_string(proc_niceness),
+            self.installer_cmd,
+            '-pkg',
+            '%s' % pkg,
+            '-target',
+            '/'
+        ]
 
-        process = subprocess.Popen(
+        proc = subprocess.Popen(
             installer_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        raw_output, _stderr = process.communicate()
+        raw_output, _stderr = proc.communicate()
 
         unknown_output = []
         success = 'false'

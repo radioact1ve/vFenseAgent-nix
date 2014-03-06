@@ -454,7 +454,7 @@ class MacOpHandler():
             apps_to_add
         )
 
-    def _install_third_party_pkg(self, pkgs):
+    def _install_third_party_pkg(self, pkgs, proc_niceness):
         success = 'false'
         error = 'Could not install pkgs.'
 
@@ -472,7 +472,7 @@ class MacOpHandler():
 
         return app_names
 
-    def _install_third_party_dmgs(self, dmgs):
+    def _install_third_party_dmgs(self, dmgs, proc_niceness):
         success = 'false'
         error = 'Could not install from dmg.'
         app_names = []
@@ -486,13 +486,15 @@ class MacOpHandler():
                         "Failed to get mount point for: {0}".format(dmg)
                     )
 
-                logger.debug("Custom App Mount ****** : {0}".format(dmg_mount))
+                logger.debug("Custom App Mount: {0}".format(dmg_mount))
 
                 pkgs = glob.glob(os.path.join(dmg_mount, '*.pkg'))
                 dmg_app_bundles = glob.glob(os.path.join(dmg_mount, '*.app'))
 
                 if pkgs:
-                    success, error = self._install_third_party_pkg(pkgs)
+                    success, error = self._install_third_party_pkg(
+                        pkgs, proc_niceness
+                    )
 
                 elif dmg_app_bundles:
                     app_names.extend(
@@ -699,8 +701,9 @@ class MacOpHandler():
                         self._get_apps_to_add_and_delete(old_install_list)
 
             elif dmgs:
-                success, error, app_names = \
-                    self._install_third_party_dmgs(dmgs)
+                success, error, app_names = self._install_third_party_dmgs(
+                    dmgs, install_data.proc_niceness
+                )
 
                 if success == 'true':
 
