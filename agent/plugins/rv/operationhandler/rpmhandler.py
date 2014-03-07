@@ -79,14 +79,22 @@ class RpmOpHandler():
 
         return CreateApplication.null_application()
 
-    def _yum_local_update(self, package_name, packages_dir):
+    def _yum_local_update(self, package_name, packages_dir, proc_niceness):
         logger.debug('Installing {0}'.format(package_name))
         #TODO: figure out if restart needed
         restart = 'false'
 
         rpms = glob.glob(os.path.join(packages_dir, '*.rpm'))
 
-        cmd = [yum.yum_cmd, '--nogpgcheck', 'localupdate', '-y']
+        cmd = [
+            'nice',
+            '-n',
+            CpuPriority.niceness_to_string(proc_niceness),
+            yum.yum_cmd,
+            '--nogpgcheck',
+            'localupdate',
+            '-y'
+        ]
         cmd.extend(rpms)
 
         try:
@@ -124,7 +132,7 @@ class RpmOpHandler():
 
             packages_dir = os.path.join(update_dir, install_data.id)
             success, error, restart = self._yum_local_update(
-                install_data.name, packages_dir
+                install_data.name, packages_dir, install_data.proc_niceness
             )
 
             if success == 'true':
@@ -154,14 +162,22 @@ class RpmOpHandler():
             apps_to_add
         )
 
-    def _yum_update(self, package_name):
+    def _yum_update(self, package_name, proc_niceness):
         logger.debug('Updating: {0}'.format(package_name))
 
         #TODO: figure out if restart needed after update
         restart = 'false'
 
         try:
-            cmd = [yum.yum_cmd, 'update', '-y', package_name]
+            cmd = [
+                'nice',
+                '-n',
+                CpuPriority.niceness_to_string(proc_niceness),
+                yum.yum_cmd,
+                'update',
+                '-y',
+                package_name
+            ]
             result, err = self.utilcmds.run_command(cmd)
 
             if err:
@@ -207,7 +223,9 @@ class RpmOpHandler():
 
         try:
             update_dir = os.path.join(update_dir, install_data.id)
-            success, error = self._rpm_install(update_dir)
+            success, error = self._rpm_install(
+                update_dir, install_data.proc_niceness
+            )
 
             if success == 'true':
                 apps_to_add, apps_to_delete = \
@@ -229,8 +247,15 @@ class RpmOpHandler():
             apps_to_add
         )
 
-    def _rpm_install(self, update_dir):
-        install_command = ['/bin/rpm', '-U', update_dir]
+    def _rpm_install(self, update_dir, proc_niceness):
+        install_command = [
+            'nice',
+            '-n',
+            CpuPriority.niceness_to_string(proc_niceness),
+            '/bin/rpm',
+            '-U',
+            update_dir
+        ]
 
         try:
             result, err = self.utilcmds.run_command(install_command)
@@ -238,22 +263,17 @@ class RpmOpHandler():
             if err:
                 raise Exception(err)
 
-            logger.info(
-                ('rhelhandler.py/_rpm_install: '
-                 'Installed all packages in: ') + update_dir)
+            logger.info("Installed all packages in: " + update_dir)
 
             return 'true', ''
 
         except Exception as e:
-            logger.error(
-                ('rhelhandler.py/_rpm_install: '
-                 'Failed to install packages in: ') + update_dir)
+            logger.error("Failed to install packages in: " + update_dir)
 
             return 'false', str(e)
 
         else:
-            logger.info(
-                'rhelhandler.py/_rpm_install: No directory provided.')
+            logger.info("No directory provided.")
 
         return 'false', 'Update dir: ' + update_dir
 

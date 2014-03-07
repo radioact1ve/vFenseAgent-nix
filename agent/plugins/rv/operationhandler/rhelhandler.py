@@ -358,14 +358,14 @@ class RhelOpHandler(RpmOpHandler):
     def install_update(self, install_data, update_dir=None):
         logger.debug('Received install_update call.')
 
-        old_install_list = self.get_installed_applications()
-
         success = 'false'
         error = ''
         restart = 'false'
         app_encoding = CreateApplication.null_application().to_dict()
         apps_to_delete = []
         apps_to_add = []
+
+        old_install_list = self.get_installed_applications()
 
         success, error, restart = self._yum_update(install_data.name)
 

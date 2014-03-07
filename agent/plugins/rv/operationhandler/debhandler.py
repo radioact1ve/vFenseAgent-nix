@@ -7,7 +7,7 @@ import hashlib
 from utils import settings, logger, utilcmds, updater
 from datetime import datetime
 from rv.data.application import CreateApplication
-from rv.rvsofoperation import RvError, InstallResult, UninstallResult
+from rv.rvsofoperation import RvError, InstallResult, UninstallResult, CpuPriority
 
 
 class FileDataKeys():
@@ -323,7 +323,8 @@ class DebianHandler():
     def _parse_repo_from_cache(self, pkg_name, version):
         try:
             results, err = self.utilcmds.run_command(
-                [self.APT_CACHE_EXE, 'madison', pkg_name])
+                [self.APT_CACHE_EXE, 'madison', pkg_name]
+            )
 
             if err:
                 raise Exception(err)
@@ -414,7 +415,8 @@ class DebianHandler():
             pkg_version = package[1]
 
             available_info, err = self.utilcmds.run_command(
-                [self.APT_CACHE_EXE, 'show', pkg_name])
+                [self.APT_CACHE_EXE, 'show', pkg_name]
+            )
 
             package_repo = self._parse_repo_from_cache(pkg_name, pkg_version)
 
@@ -588,10 +590,18 @@ class DebianHandler():
             logger.error('Failed to clean /var/cache/apt/archives.')
             logger.exception(e)
 
-    def _apt_install(self, package_name):
+    def _apt_install(self, package_name, proc_niceness):
         logger.debug('Installing {0}'.format(package_name))
 
-        install_command = [self.APT_GET_EXE, 'install', '-y', package_name]
+        install_command = [
+            'nice',
+            '-n',
+            CpuPriority.niceness_to_string(proc_niceness),
+            self.APT_GET_EXE,
+            'install',
+            '-y',
+            package_name
+        ]
 
         #TODO: figure out if restart needed
         restart = 'false'
@@ -711,7 +721,9 @@ class DebianHandler():
         moving_error = self._move_pkgs_to_apt_dir(packages_dir)
 
         if not moving_error:
-            success, error, restart = self._apt_install(install_data.name)
+            success, error, restart = self._apt_install(
+                install_data.name, install_data.proc_niceness
+            )
 
             if success == 'true':
 
@@ -762,7 +774,9 @@ class DebianHandler():
 
         try:
             update_dir = os.path.join(update_dir, install_data.id)
-            success, error = self._dpkg_install(update_dir)
+            success, error = self._dpkg_install(
+                update_dir, install_data.proc_niceness
+            )
 
             if success == 'true':
                 apps_to_add, apps_to_delete = \
@@ -838,7 +852,7 @@ class DebianHandler():
             []
         )
 
-    def _dpkg_install(self, update_dir=None):
+    def _dpkg_install(self, update_dir, proc_niceness):
         """Install an update or install a new package.
 
         If an update directory is given, it must be made sure that
@@ -847,7 +861,15 @@ class DebianHandler():
         """
 
         if update_dir:
-            install_command = ['dpkg', '-i',  '-R', update_dir]
+            install_command = [
+                'nice',
+                '-n',
+                CpuPriority.niceness_to_string(proc_niceness),
+                'dpkg',
+                '-i',
+                '-R',
+                update_dir
+            ]
 
             try:
                 result, err = self.utilcmds.run_command(install_command)
@@ -855,21 +877,16 @@ class DebianHandler():
                 if err:
                     raise Exception(err)
 
-                logger.info(
-                    ('debhandler.py/_dpkg_install: '
-                     'Installed all packages in: ') + update_dir)
+                logger.info("Installed all packages in: " + update_dir)
 
                 return 'true', ''
 
             except Exception as e:
-                logger.error(
-                    ('debhandler.py/_dpkg_install: '
-                     'Failed to install packages in: ') + update_dir)
+                logger.error("Failed to install packages in: " + update_dir)
 
                 return 'false', str(e)
         else:
-            logger.info(
-                'debhandler.py/_dpkg_install: No directory provided.')
+            logger.info("No directory provided.")
 
         return 'false', 'Update dir: ' + update_dir
 
