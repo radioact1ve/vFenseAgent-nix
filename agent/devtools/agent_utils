@@ -1009,7 +1009,10 @@ class DebUtils:
         cmd = [self.update_rc, '-f', self.daemon_name, 'remove']
         output, err = run_command(cmd)
         if err:
-            if not "No such file or directory" in err:
+            if ("No such file or directory" in err or
+                "missing LSB tags" in err):
+                pass
+            else:
                 raise Exception(err)
 
     def _clean_up(self):
@@ -1025,17 +1028,22 @@ class DebUtils:
         cmd = [self.update_rc, self.daemon_name, 'defaults']
         results, err = run_command(cmd)
         if err:
-            raise Exception(err)
+            if "missing LSB tags" in err:
+                pass
+            else:
+                raise Exception(err)
 
     def _deb_check_run_levels(self):
         for level in range(2, 6):
             rc_dir = '/etc/rc{0}.d/'.format(level)
 
-            if 'S20tpagentd' in os.listdir(rc_dir):
+            found = [listing for listing in os.listdir(rc_dir)
+                     if self.daemon_name in listing]
+            if found:
                 pass
             else:
                 raise Exception(
-                    "S20tpagentd not in /etc/rc{0}.d/".format(level)
+                    "{0} not in {1}".format(self.daemon_name, rc_dir)
                 )
 
     def _start_agent(self):
@@ -1273,7 +1281,8 @@ def get_platform_utils():
 
 def check_privilege():
     """
-    Checks for sudo privileges. Exits if it does not have sudo privileges.
+    Checks for sudo privileges. Terminates program if it does not have
+    sudo privileges.
     """
     if os.geteuid() != 0:
         printErrors(["Agent utilities must be run as root."])
