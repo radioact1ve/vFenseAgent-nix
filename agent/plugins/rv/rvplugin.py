@@ -1,13 +1,13 @@
 import shutil
 import os
 import platform
-import urllib
 import glob
 import json
 
 from agentplugin import AgentPlugin
 from rv.data.application import CreateApplication
-from utils import RepeatTimer, settings, logger, systeminfo, uninstaller
+from utils import RepeatTimer, settings, logger, systeminfo
+from utils import uninstaller, throd
 from serveroperation.sofoperation import SofOperation, OperationKey
 from serveroperation.sofoperation import OperationValue, RequestMethod
 
@@ -26,6 +26,7 @@ class RvPlugin(AgentPlugin):
         self._update_directory = settings.UpdatesDirectory
         self._operation_handler = self._create_op_handler()
         self.uninstaller = uninstaller.Uninstaller()
+        self.throd = throd.ThrottleDownload()
 
     def start(self):
         """ Runs once the agent core is initialized.
@@ -131,7 +132,7 @@ class RvPlugin(AgentPlugin):
 
         try:
 
-            self._download_updates(operation)
+            self._download_packages(operation)
 
         except Exception as e:
             logger.error("Error occured while downloading updates.")
@@ -501,14 +502,17 @@ class RvPlugin(AgentPlugin):
         self._operation_handler.get_installed_updates()
         self._operation_handler.get_installed_applications()
 
-    def _download_file(self, download_dir, file_uris, file_size):
+    def _download_file(self, uri, download_dir, dl_rate=None):
         """
         Loops through all the file_uris provided and terminates when
         downloaded successfully or exhausts the file_uris list.
 
         Returns:
-            (bool) - Success download.
+            (bool) - Successful download.
         """
+        file_uris = uri[RvOperationKey.FileUris]
+        file_size = uri[RvOperationKey.FileSize]
+
         # Loop through each possible uri for the package
         for file_uri in file_uris:
             logger.debug("Downloading from: {0}".format(file_uri))
@@ -517,7 +521,8 @@ class RvPlugin(AgentPlugin):
             download_path = os.path.join(download_dir, file_name)
 
             try:
-                urllib.urlretrieve(file_uri, download_path)
+                self.throd.set_rate(dl_rate)
+                self.throd.download(file_uri, download_path)
 
                 if self._check_if_downloaded(download_path, file_size):
                     logger.debug("Downloaded successfully.")
@@ -537,8 +542,8 @@ class RvPlugin(AgentPlugin):
 
         return False
 
-    def _download_updates(self, operation):
-        """ Download updates from the urls provided in the 'operation'
+    def _download_packages(self, operation):
+        """ Download packages from the urls provided in the 'operation'
          parameter.
 
         Args:
@@ -566,12 +571,12 @@ class RvPlugin(AgentPlugin):
 
                 # Loop through the individual packages that make up the app
                 for uri in install_data.uris:
-                    file_uris = uri[RvOperationKey.FileUris]
-                    file_size = uri[RvOperationKey.FileSize]
+                    logger.debug(
+                        "File uris: {0}".format(uri[RvOperationKey.FileUris])
+                    )
 
-                    logger.debug("File uris: {0}".format(file_uris))
-
-                    if not self._download_file(app_dir, file_uris, file_size):
+                    # TODO: add the download rate specified in the operation
+                    if not self._download_file(uri, app_dir):
                         # On failure to download a single file, quit.
                         install_data.downloaded = False
                         break
