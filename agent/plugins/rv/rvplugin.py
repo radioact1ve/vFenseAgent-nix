@@ -574,9 +574,11 @@ class RvPlugin(AgentPlugin):
                     logger.debug(
                         "File uris: {0}".format(uri[RvOperationKey.FileUris])
                     )
-
-                    # TODO: add the download rate specified in the operation
-                    if not self._download_file(uri, app_dir):
+                    
+                    dl_success = self._download_file(
+                        uri, app_dir, operation.net_throttle
+                    )
+                    if not dl_success:
                         # On failure to download a single file, quit.
                         install_data.downloaded = False
                         break

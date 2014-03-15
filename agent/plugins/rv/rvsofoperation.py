@@ -118,6 +118,7 @@ class RvOperationKey():
     PackageType = 'pkg_type'
     CliOptions = 'cli_options'
     CpuThrottle = 'cpu_throttle'
+    NetThrottle = 'net_throttle'
     ThirdParty = 'supported_third_party'
 
     FileData = 'file_data'
@@ -146,11 +147,11 @@ class CpuPriority():
     @staticmethod
     def get_niceness(throttle_value):
         niceness_values = {
-            CpuPriority.BelowNormal: 5,
+            CpuPriority.Idle: 20,
+            CpuPriority.BelowNormal: 10,
             CpuPriority.Normal: 0,
-            CpuPriority.Idle: 0,
-            CpuPriority.AboveNormal: -5,
-            CpuPriority.High: -10
+            CpuPriority.AboveNormal: -10,
+            CpuPriority.High: -20
         }
 
         return niceness_values.get(throttle_value, 0)
@@ -218,6 +219,7 @@ class RvSofOperation(SofOperation):
         # TODO: Fix hack. Lazy to use rvplugin module because of circular deps.
         self.plugin = 'rv'
         self.cpu_priority = self._get_cpu_priority()
+        self.net_throttle = self.json_message[RvOperationKey.NetThrottle]
 
         if self.type in RvOperationValue.InstallOperations:
 
