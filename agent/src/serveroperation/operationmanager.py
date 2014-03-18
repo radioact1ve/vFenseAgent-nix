@@ -4,7 +4,6 @@ import subprocess
 import datetime
 import json
 
-
 from net import netmanager
 from threading import Thread
 from data.sqlitemanager import SqliteManager
@@ -86,9 +85,7 @@ class OperationManager():
             - True if operation was added successfully. False otherwise.
         """
 
-        self.add_to_operation_queue(message)
-
-        return True
+        return self.add_to_operation_queue(message)
 
     def _major_failure(self, operation, exception):
 
@@ -108,14 +105,20 @@ class OperationManager():
             # TODO: Should we send something back to server?
             logger.critical("Operation is empty in _major_failure")
 
-    ################# THE BIG OPERATION PROCESSOR!! ###########################
+    ###################### THE BIG OPERATION PROCESSOR!! ######################
     ###########################################################################
     def process_operation(self, operation):
-
         try:
-
             if not isinstance(operation, SofOperation):
                 operation = SofOperation(operation)
+
+            if operation.agent_queue_ttl < time.time():
+                logger.info(
+                    "Operation {0} is past its agent queue ttl."
+                    .format(operation.__dict__)
+                )
+
+                return
 
             logger.info(
                 "Process the following operation: {0}"
@@ -134,7 +137,6 @@ class OperationManager():
             }
 
             if operation.type in operation_methods:
-
                 # Call method
                 operation_methods[operation.type](operation)
 
@@ -142,14 +144,12 @@ class OperationManager():
                 self.plugin_op(operation)
 
             else:
-
                 raise Exception(
                     'Operation/Plugin {0} was not found.'
                     .format(operation.__dict__)
                 )
 
         except Exception as e:
-
             logger.error(
                 "Error while processing operation: {0}"
                 .format(operation.__dict__)
@@ -430,28 +430,14 @@ class OperationManager():
             logger.exception(e)
 
     def add_to_operation_queue(self, operation):
-        """
-        Put the operation to file.
-
-        Args:
-            operation - The actual operation.
-
-            no_duplicate - Will not put the operation in the queue if there
-                           already exists an operation of the same type in
-                           queue.
-
-        Returns:
-            (bool) True if able to put the operation in queue, False otherwise.
-
-        """
-
         #if no_duplicate:
         #    return self._operation_queue.put_non_duplicate(operation)
+        if operation.server_queue_ttl < time.time():
+            return False
 
         return self._operation_queue.put(operation)
 
     def _operation_queue_loop(self):
-
         while True:
             self.operation_queue_file_dump()
 

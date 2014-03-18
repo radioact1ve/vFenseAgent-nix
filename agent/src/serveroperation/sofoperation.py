@@ -39,6 +39,8 @@ class OperationKey():
     RvId = 'id'
     CustomerName = 'customer_name'
     Message = 'message'
+    ServerQueueTTL = 'server_queue_ttl'
+    AgentQueueTTL = 'agent_queue_ttl'
 
     Core = 'core'
     Plugins = 'plugins'
@@ -121,7 +123,6 @@ class SofOperation(object):
             self._load_message(message)
 
         else:
-
             self.json_message = settings.EmptyValue
 
             self.id = self.self_assigned_id()
@@ -130,6 +131,7 @@ class SofOperation(object):
             self.raw_operation = settings.EmptyValue
 
     def _load_message(self, message):
+        self.raw_operation = message
         self.json_message = json.loads(message)
 
         self.id = self.json_message.get(
@@ -142,7 +144,8 @@ class SofOperation(object):
 
         self.type = self.json_message[OperationKey.Operation]
 
-        self.raw_operation = message
+        self.server_queue_ttl = self.json_message[OperationKey.ServerQueueTTL]
+        self.agent_queue_ttl = self.json_message[OperationKey.AgentQueueTTL]
 
     def _is_savable(self):
         non_savable = [OperationValue.Reboot, OperationValue.Shutdown,
