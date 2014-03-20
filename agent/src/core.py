@@ -33,7 +33,6 @@ from agentplugin import AgentPlugin
 class MainCore():
 
     def __init__(self, app_name):
-
         if os.geteuid() != 0:
             sys.exit("TopPatch Agent must be run as root.")
 
@@ -46,7 +45,6 @@ class MainCore():
         self.register_plugins()
 
     def run(self):
-
         logger.info("Starting %s." % self.app_name)
 
         while not self.internet_on():
@@ -99,14 +97,12 @@ class MainCore():
                            _class.__module__ != 'agentplugin':
 
                             try:
-
                                 plug = _class()
 
                                 if isinstance(plug, AgentPlugin):
                                     plugins.append(plug)
 
                             except Exception as e:
-
                                 logger.debug(
                                     'Unable to import module %s. Skipping.'
                                     % _class.__module__
@@ -116,20 +112,16 @@ class MainCore():
         return plugins
 
     def register_plugins(self):
-
         for plugin in self.found_plugins:
             self.registered_plugins[plugin.name()] = plugin
 
     def internet_on(self):
-
         try:
-
             urllib2.urlopen('http://www.google.com', timeout=3)
             logger.debug('Internet connection detected.')
             return True
 
         except Exception as e:
-
             logger.debug('No internet connection detected.')
             logger.exception(e)
             return False
