@@ -440,7 +440,7 @@ class OperationManager():
 
         except Exception as e:
             logger.debug(
-                "Failed to create operation from: {0}".format(op)
+                "Failed to create operation from: {0}".format(operation)
             )
             logger.exception(e)
 
