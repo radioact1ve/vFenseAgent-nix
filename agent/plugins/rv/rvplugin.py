@@ -166,7 +166,7 @@ class RvPlugin(AgentPlugin):
 
             if operation.type == RvOperationValue.InstallAgentUpdate:
                 self._agent_update(operation, update_dir)
-            # TODO(urgent): remove this, only for testing
+            # TODO: remove this, only for testing
             #elif operation.type == RvOperationValue.InstallCustomApps:
             #    self._agent_update(operation, update_dir)
             else:
@@ -199,7 +199,7 @@ class RvPlugin(AgentPlugin):
                 RequestMethod.PUT
             )
 
-            # TODO(urgent): always leave commented out, or remove
+            # TODO: always leave commented out, or remove
             #loaded = json.loads(rvsof_result.raw_result)
             #print json.dumps(loaded, indent=4)
 
@@ -217,7 +217,7 @@ class RvPlugin(AgentPlugin):
     def _agent_update(self, operation, update_dir):
         urn_response = RvUrn.get_operation_urn(operation.type)
         install_method = self._get_install_method(operation.type)
-        # TODO(urgent): remove this, only for testing
+        # TODO: remove this, only for testing
         #install_method = self._operation_handler.install_agent_update
 
         restart_needed = False

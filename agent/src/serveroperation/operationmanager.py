@@ -45,7 +45,6 @@ class OperationManager():
             plugin.register_operation_callback(self.register_plugin_operation)
 
     def _save_and_send_results(self, operation):
-
         # Check for self assigned operation IDs and send emtpy string
         # to server if present.
         op_id = operation.id
@@ -112,16 +111,16 @@ class OperationManager():
             if not isinstance(operation, SofOperation):
                 operation = SofOperation(operation)
 
-            if operation.agent_queue_ttl < time.time():
+            if not operation.agent_queue_ttl_valid():
                 logger.info(
-                    "Operation {0} is past its agent queue ttl."
+                    "Operation past its agent queue ttl: {0}"
                     .format(operation.__dict__)
                 )
 
                 return
 
             logger.info(
-                "Process the following operation: {0}"
+                "Processing the following operation: {0}"
                 .format(operation.__dict__)
             )
 
@@ -432,7 +431,7 @@ class OperationManager():
     def add_to_operation_queue(self, operation):
         #if no_duplicate:
         #    return self._operation_queue.put_non_duplicate(operation)
-        if operation.server_queue_ttl < time.time():
+        if not operation.server_queue_ttl_valid():
             return False
 
         return self._operation_queue.put(operation)
@@ -543,16 +542,11 @@ class OperationManager():
             logger.exception(e)
 
     def server_response_processor(self, message):
-
         if message:
-
             for op in message.get('data', []):
-
                 # Loading operation for server in order for the queue
                 # dump to know if an operation is savable to file.
-
                 try:
-
                     operation = SofOperation(json.dumps(op))
                     self.add_to_operation_queue(operation)
 
@@ -565,7 +559,6 @@ class OperationManager():
         self._save_uptime()
 
     def system_info(self):
-
         root = {}
         root['os_code'] = systeminfo.code()
         root['os_string'] = systeminfo.name()

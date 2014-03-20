@@ -63,19 +63,19 @@ class RvUrn():
         if RvOperationValue.InstallUpdate == op_name:
             return RvUrn.get_install_update_result_urn()
 
-        if RvOperationValue.InstallSupportedApps == op_name: 
+        if RvOperationValue.InstallSupportedApps == op_name:
             return RvUrn.get_install_supported_apps_urn()
 
         if RvOperationValue.InstallCustomApps == op_name:
             return RvUrn.get_install_custom_apps_urn()
 
-        if RvOperationValue.InstallAgentUpdate == op_name: 
+        if RvOperationValue.InstallAgentUpdate == op_name:
             return RvUrn.get_install_agent_update_urn()
 
-        if RvOperationValue.Uninstall == op_name: 
+        if RvOperationValue.Uninstall == op_name:
             return RvUrn.get_uninstall_result_urn()
 
-        if RvOperationValue.RefreshApps == op_name: 
+        if RvOperationValue.RefreshApps == op_name:
             return RvUrn.get_refresh_apps_urn()
 
     @staticmethod
@@ -202,7 +202,6 @@ class InstallData():
 class UninstallData():
 
     def __init__(self):
-
         self.name = ""
         self.id = ""
         self.third_party = False
@@ -218,8 +217,10 @@ class RvSofOperation(SofOperation):
 
         # TODO: Fix hack. Lazy to use rvplugin module because of circular deps.
         self.plugin = 'rv'
-        self.cpu_priority = self._get_cpu_priority()
-        self.net_throttle = self.json_message[RvOperationKey.NetThrottle]
+
+        if self.json_message:
+            self.cpu_priority = self._get_cpu_priority()
+            self.net_throttle = self.json_message[RvOperationKey.NetThrottle]
 
         if self.type in RvOperationValue.InstallOperations:
 
@@ -260,9 +261,7 @@ class RvSofOperation(SofOperation):
             data_list = []
 
         try:
-
             for data in data_list:
-
                 install_data = InstallData()
 
                 install_data.name = data[RvOperationKey.Name]
@@ -304,7 +303,6 @@ class RvSofOperation(SofOperation):
                 data_list = []
 
             for data in data_list:
-
                 uninstall_data = UninstallData()
 
                 uninstall_data.name = data[RvOperationKey.Name]

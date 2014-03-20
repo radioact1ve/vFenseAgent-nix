@@ -144,8 +144,12 @@ class SofOperation(object):
 
         self.type = self.json_message[OperationKey.Operation]
 
-        self.server_queue_ttl = self.json_message[OperationKey.ServerQueueTTL]
-        self.agent_queue_ttl = self.json_message[OperationKey.AgentQueueTTL]
+        self.server_queue_ttl = self.json_message.get(
+            OperationKey.ServerQueueTTL, None
+        )
+        self.agent_queue_ttl = self.json_message.get(
+            OperationKey.AgentQueueTTL, None
+        )
 
     def _is_savable(self):
         non_savable = [OperationValue.Reboot, OperationValue.Shutdown,
@@ -153,6 +157,20 @@ class SofOperation(object):
 
         if self.type in non_savable:
             return False
+
+        return True
+
+    def server_queue_ttl_valid(self):
+        if self.server_queue_ttl != None:
+            if time.time() > self.server_queue_ttl:
+                return False
+
+        return True
+
+    def agent_queue_ttl_valid(self):
+        if self.agent_queue_ttl != None:
+            if time.time() > self.agent_queue_ttl:
+                return False
 
         return True
 
