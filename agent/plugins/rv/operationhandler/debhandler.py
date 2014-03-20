@@ -114,12 +114,12 @@ class DebianHandler():
 
         return release_date
 
-    def _create_app_from_dict(self, package_dictionary, update_app=False):
+    def _create_app_from_dict(self, package_dictionary, is_update_app=False):
         """Convert package dictionary into an instance of application.
 
         Arguments:
 
-        update_app - Takes extra steps for update applications
+        is_update_app - Takes extra steps for update applications
 
         """
 
@@ -129,7 +129,7 @@ class DebianHandler():
         installed = 'false'
         install_date = ''
 
-        if not update_app:
+        if not is_update_app:
             status = package_dictionary.get(PkgDictValues.installed, '')
             installed = status == self.INSTALLED_STATUS
 
@@ -139,7 +139,7 @@ class DebianHandler():
         file_data = []
         dependencies = []
 
-        if update_app:
+        if is_update_app:
             file_data = package_dictionary.get('file_data', [])
 
             if file_data:

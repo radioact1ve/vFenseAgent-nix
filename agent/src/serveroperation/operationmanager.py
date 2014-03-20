@@ -431,8 +431,18 @@ class OperationManager():
     def add_to_operation_queue(self, operation):
         #if no_duplicate:
         #    return self._operation_queue.put_non_duplicate(operation)
-        if not operation.server_queue_ttl_valid():
-            return False
+        try:
+            if not isinstance(operation, SofOperation):
+                operation = SofOperation(json.dumps(op))
+
+            if not operation.server_queue_ttl_valid():
+                return False
+
+        except Exception as e:
+            logger.debug(
+                "Failed to create operation from: {0}".format(op)
+            )
+            logger.exception(e)
 
         return self._operation_queue.put(operation)
 
