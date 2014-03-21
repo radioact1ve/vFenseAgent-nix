@@ -114,6 +114,24 @@ class DebianHandler():
 
         return release_date
 
+    def _translate_severity(self, vendor_severity):
+        # See section 2.5 at:
+        # http://www.debian.org/doc/debian-policy/ch-archive.html
+
+        critical = 'critical'
+        recommended = 'recommended'
+        optional = 'optional'
+
+        known_severities = {
+            'required': critical,
+            'important': critical,
+            'optional': recommended,
+            'standard': optional,
+            'extra': optional
+        }
+
+        return known_severities.get(vendor_severity, optional)
+
     def _create_app_from_dict(self, package_dictionary, is_update_app=False):
         """Convert package dictionary into an instance of application.
 
@@ -155,7 +173,9 @@ class DebianHandler():
                     logger.exception(e)
 
         support_url = package_dictionary.get(PkgDictValues.support_url, '')
-
+        vendor_severity = self._translate_severity(
+            package_dictionary.get(PkgDictValues.vendor_severity, '')
+        )
         repo = package_dictionary.get('repo', '')
 
         description = package_dictionary.get(PkgDictValues.description, '')
@@ -172,7 +192,7 @@ class DebianHandler():
                 file_data,
                 dependencies,
                 support_url,
-                package_dictionary.get(PkgDictValues.vendor_severity, ''),
+                vendor_severity,
                 package_dictionary.get(PkgDictValues.file_size, ''),
                 "",  # Vendor id
                 "",  # Vendor name
@@ -502,8 +522,8 @@ class DebianHandler():
                     update_pkgs_data[pkg_name], True
                 )
 
-                # Slow, but as accurate as apt-get,
-                # returns a list of dictionaries which includes all deps
+                # Slow, but as accurate as apt-get.
+                # Returns a list of dictionaries which includes all deps
                 # [{'name': .. , 'version' : .. , 'app_id' : ..}]
                 app.dependencies = self._get_app_dependencies(app.name)
 
