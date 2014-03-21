@@ -24,7 +24,7 @@ class MacOpHandler():
         # Initialize mac table stuff.
         #self._macsqlite = SqliteMac()
         #self._macsqlite.recreate_update_data_table()
-        self.utilcmds = utilcmds.UtilCmds()
+        self.softwareupdate = '/usr/sbin/softwareupdate'
 
         self._catalog_directory = \
             os.path.join(settings.AgentDirectory, 'catalogs')
@@ -35,6 +35,7 @@ class MacOpHandler():
         if not os.path.isdir(self._catalog_directory):
             os.mkdir(self._catalog_directory)
 
+        self.utilcmds = utilcmds.UtilCmds()
         self.pkg_installer = PkgInstaller()
         self.dmg_installer = DmgInstaller()
         self.plist = PlistInterface()
@@ -221,19 +222,22 @@ class MacOpHandler():
         return s.get_data()
 
     def _get_softwareupdate_data(self):
-        cmd = ['/usr/sbin/softwareupdate', '-l', '-f', self._updates_plist]
 
+        cmd = [self.softwareupdate, '-l', '-f', self._updates_plist]
         # Little trick to hide the command's output from terminal.
         with open(os.devnull, 'w') as dev_null:
             subprocess.call(cmd, stdout=dev_null, stderr=dev_null)
 
-        cmd = ['/bin/cat', self._updates_plist]
-        output, _ = self.utilcmds.run_command(cmd)
+        file_data, _ = self.utilcmds.run_command(
+            ['/bin/cat', self._updates_plist]
+        )
 
-        return output
+        return file_data
 
     def create_apps_from_plist_dicts(self, app_dicts):
         applications = []
+
+        self._append_update_priorities(app_dicts)
 
         for app_dict in app_dicts:
             try:
@@ -243,24 +247,25 @@ class MacOpHandler():
 
                 app_name = app_dict['name']
 
-                release_date = self._get_package_release_date(app_name)
+                # Just in case there's HTML, strip it out
+                # and get rid of newlines.
+                description = MacOpHandler._strip_body_tags(
+                    app_dict['description']
+                ).replace('\n', ''),
+
                 file_data = self._get_file_data(app_name)
+                release_date = self._get_package_release_date(app_name)
 
                 dependencies = []
 
                 app_inst = CreateApplication.create(
                     app_name,
                     app_dict['version'],
-
-                    # Just in case there's HTML, strip it out
-                    MacOpHandler._strip_body_tags(app_dict['description'])
-                    # and get rid of newlines.
-                    .replace('\n', ''),
-
+                    description,
                     file_data,  # file_data
                     dependencies,
                     '',  # support_url
-                    '',  # vendor_severity
+                    app_dict.get('vendor_severity', ''),  # vendor_severity
                     '',  # file_size
                     app_dict['productKey'],  # vendor_id
                     'Apple',  # vendor_name
@@ -287,6 +292,20 @@ class MacOpHandler():
 
         return applications
 
+    def _append_update_priorities(self, app_dicts):
+        list_data, _ = self.utilcmds.run_command([self.softwareupdate, '-l'])
+
+        for app_dict in app_dicts:
+            # default
+            app_dict['vendor_severity'] = 'optional'
+
+            for line in list_data.splitlines():
+                if app_dict['name'] in line:
+                    # TODO: figure out what other priorities arise
+                    # from the 'softwareupdate -l' command
+                    if '[recommended]' in line:
+                        app_dict['vendor_severity'] = 'recommended'
+
     def get_available_updates(self):
         """
         Uses the softwareupdate OS X app to see what updates are available.
@@ -302,19 +321,19 @@ class MacOpHandler():
             logger.debug("Done downloading catalogs.")
 
             logger.debug("Getting softwareupdate data.")
-            avail_data = self._get_softwareupdate_data()
+            file_data = self._get_softwareupdate_data()
             logger.debug("Done getting softwareupdate data.")
 
             logger.debug("Crunching available updates data.")
             plist_app_dicts = \
-                self.plist.get_plist_app_dicts_from_string(avail_data)
+                self.plist.get_plist_app_dicts_from_string(file_data)
 
             self.updates_catalog.create_updates_catalog(plist_app_dicts)
 
             available_updates = \
                 self.create_apps_from_plist_dicts(plist_app_dicts)
 
-            logger.info('Done getting available updates.')
+            logger.info("Done getting available updates.")
 
             return available_updates
 
