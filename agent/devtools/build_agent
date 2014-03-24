@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 """
-    Usage: go run forge.go x.x.x {platform}
+    Usage: ./build_agent x.x.x {platform}
 
-    Example: go run forge.go 0.7.1 deb
+    Example: ./build_agent 0.7.1 deb
 """
 
 import os
