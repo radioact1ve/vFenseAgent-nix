@@ -34,20 +34,24 @@ class OperationKey():
     Success = 'success'
     Error = 'error'
     Reboot = 'reboot'
+    RebootRequired = 'reboot_required'
     Rebooted = 'rebooted'
     VendorId = 'vendor_id'
     RvId = 'id'
     CustomerName = 'customer_name'
     Message = 'message'
+
     ServerQueueTTL = 'server_queue_ttl'
     AgentQueueTTL = 'agent_queue_ttl'
+
+    ResponseURI = 'response_uri'
+    RequestMethod = 'request_method'
 
     Core = 'core'
     Plugins = 'plugins'
 
 
 class OperationError():
-
     pass
 
 
@@ -57,7 +61,7 @@ class RequestMethod():
     PUT = 'PUT'
 
 
-class CoreUrn():
+class CoreUris():
 
     # *********************************************************
     # IMPORTANT: Use the provided methods to get the attributes.
@@ -73,32 +77,32 @@ class CoreUrn():
     Logout = 'rvl/logout'
 
     @staticmethod
-    def get_checkin_urn():
-        return CoreUrn.Checkin.format(settings.AgentId)
+    def get_checkin_uri():
+        return CoreUris.Checkin.format(settings.AgentId)
 
     @staticmethod
-    def get_reboot_urn():
-        return CoreUrn.Reboot.format(settings.AgentId)
+    def get_reboot_uri():
+        return CoreUris.Reboot.format(settings.AgentId)
 
     @staticmethod
-    def get_shutdown_urn():
-        return CoreUrn.Shutdown.format(settings.AgentId)
+    def get_shutdown_uri():
+        return CoreUris.Shutdown.format(settings.AgentId)
 
     @staticmethod
-    def get_startup_urn():
-        return CoreUrn.Startup.format(settings.AgentId)
+    def get_startup_uri():
+        return CoreUris.Startup.format(settings.AgentId)
 
     @staticmethod
-    def get_new_agent_urn():
-        return CoreUrn.NewAgent
+    def get_new_agent_uri():
+        return CoreUris.NewAgent
 
     @staticmethod
-    def get_login_urn():
-        return CoreUrn.Login
+    def get_login_uri():
+        return CoreUris.Login
 
     @staticmethod
-    def get_logout_urn():
-        return CoreUrn.Logout
+    def get_logout_uri():
+        return CoreUris.Logout
 
 
 SelfGeneratedOpId = '-agent'
@@ -112,11 +116,15 @@ class SofOperation(object):
         self.raw_result = settings.EmptyValue
         self.core_data = {}
         self.plugin_data = {}
+        self.rebooted = 'no'
         self.reboot_delay_seconds = 90
         self.shutdown_delay_seconds = 90
         self.error = settings.EmptyValue
 
-        self.urn_response = ''
+        self.server_queue_ttl = None
+        self.agent_queue_ttl = None
+
+        self.response_uri = ''
         self.request_method = ''
 
         if message:
@@ -151,7 +159,15 @@ class SofOperation(object):
             OperationKey.AgentQueueTTL, None
         )
 
-    def _is_savable(self):
+        # Fail if missing
+        self.response_uri = self.json_message.get(
+            OperationKey.ResponseURI, ''
+        )
+        self.request_method = self.json_message.get(
+            OperationKey.RequestMethod, ''
+        )
+
+    def is_savable(self):
         non_savable = [OperationValue.Reboot, OperationValue.Shutdown,
                        OperationValue.Startup, OperationValue.NewAgent]
 
@@ -161,14 +177,14 @@ class SofOperation(object):
         return True
 
     def server_queue_ttl_valid(self):
-        if self.server_queue_ttl != None:
+        if self.server_queue_ttl is not None:
             if time.time() > self.server_queue_ttl:
                 return False
 
         return True
 
     def agent_queue_ttl_valid(self):
-        if self.agent_queue_ttl != None:
+        if self.agent_queue_ttl is not None:
             if time.time() > self.agent_queue_ttl:
                 return False
 
@@ -200,26 +216,18 @@ class SofOperation(object):
         self.data.append(deps)
 
     def to_json(self):
-        """Converts operation to a JSON formatted string.
+        json_dict = {
+            OperationKey.AgentId: settings.AgentId,
+            OperationKey.OperationId: self.id,
+            OperationKey.Operation: self.type,
+            OperationKey.CustomerName: settings.Customer,
+            OperationKey.Rebooted: self.rebooted,
+            OperationKey.Plugins: self.plugin_data,
+        }
 
-        The string has the following keys:
+        json_dict.update(self.core_data)
 
-        - Operation type
-        - Operation ID
-        - Plugin name if available. Empty string otherwise.
-
-        Returns:
-
-            - Returns the basic properties of an operation in JSON string.
-        """
-
-        root = {}
-
-        root[OperationKey.Operation] = self.type
-        root[OperationKey.OperationId] = self.id
-        root[OperationKey.Plugin] = self.plugin
-
-        return json.dumps(root)
+        return json.dumps(json_dict)
 
 
 class ResultOperation():
@@ -234,7 +242,7 @@ class ResultOperation():
         Arguments:
 
         operation
-            An object which MUST contain a raw_result, urn_response,
+            An object which MUST contain a raw_result, response_uri,
             and request_method attribute.
 
         retry
@@ -272,7 +280,7 @@ class ResultOperation():
 
         return False
 
-    def _is_savable(self):
+    def is_savable(self):
         non_savable = [OperationValue.Startup, OperationValue.NewAgent]
 
         if self.operation.type in non_savable:
@@ -281,7 +289,6 @@ class ResultOperation():
         return True
 
     def self_assigned_id(self):
-
         return str(uuid.uuid4()) + SelfGeneratedOpId
 
 
@@ -289,11 +296,24 @@ class SofResult():
     """
     Data structure to pass around operation results.
     """
-    def __init__(self, rv_id='', successful=False, restart=False, message=''):
+    def __init__(self, operation, success, reboot_required, error):
+        self.id = operation.id
+        self.type = operation.type
+        self.success = success
+        self.reboot_required = reboot_required
+        self.error = error
 
-        self.id = rv_id
-        # TODO: Preparing for changes with app names
-#        self.name = app_name
-        self.successful = successful
-        self.restart = restart
-        self.specific_message = message
+        self.response_uri = operation.response_uri
+        self.request_method = operation.request_method
+
+        self.raw_result = self.to_json()
+
+    def to_json(self):
+        json_dict = {
+            OperationKey.OperationId: self.id,
+            OperationKey.Success: self.success,
+            OperationKey.RebootRequired: self.reboot_required,
+            OperationKey.Error: self.error
+        }
+
+        return json.dumps(json_dict)

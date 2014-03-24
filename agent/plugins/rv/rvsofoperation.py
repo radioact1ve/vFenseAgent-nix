@@ -318,8 +318,8 @@ class RvSofOperation(SofOperation):
 
         return uninstall_data_list
 
-    def _is_savable(self):
-        if not super(RvSofOperation, self)._is_savable():
+    def is_savable(self):
+        if not super(RvSofOperation, self).is_savable():
             return False
 
         non_savable = [RvOperationValue.RefreshApps]
@@ -351,6 +351,7 @@ class RvSofResult(RvSofOperation):
                  urn_response, request_method):
 
         self.id = operation_id  # "uuid"
+        self.type = operation_type
         self.success = success  # "true" or "false"
         self.reboot_required = reboot_required  # "true" or "false"
         self.error = error  # "error message"
@@ -361,21 +362,22 @@ class RvSofResult(RvSofOperation):
         self.urn_response = urn_response
         self.request_method = request_method
 
-        self.type = operation_type
         self.raw_result = self.to_json()
 
     def to_json(self):
-        root = {"operation_id": self.id,
-                "operation": self.type,
-                "success": self.success,
-                "reboot_required": self.reboot_required,
-                "error": self.error,
-                "app_id": self.app_id,
-                "apps_to_delete": self.apps_to_delete,
-                "apps_to_add": self.apps_to_add,
-                "data": self.data}
+        json_dict = {
+            "operation_id": self.id,
+            "operation": self.type,
+            "success": self.success,
+            "reboot_required": self.reboot_required,
+            "error": self.error,
+            "app_id": self.app_id,
+            "apps_to_delete": self.apps_to_delete,
+            "apps_to_add": self.apps_to_add,
+            "data": self.data
+        }
 
-        return json.dumps(root)
+        return json.dumps(json_dict)
 
     def update_raw_result(self):
         self.raw_result = self.to_json()

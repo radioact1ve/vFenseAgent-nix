@@ -8,9 +8,9 @@ from net import netmanager
 from threading import Thread
 from data.sqlitemanager import SqliteManager
 from utils import systeminfo, settings, logger, queuesave
-from serveroperation.sofoperation import SofOperation, SelfGeneratedOpId
-from serveroperation.sofoperation import OperationKey, OperationValue, CoreUrn
-from serveroperation.sofoperation import ResultOperation, RequestMethod
+from serveroperation.sofoperation import SofOperation, SofResult, \
+    OperationKey, OperationValue, ResultOperation, RequestMethod, CoreUris, \
+    SelfGeneratedOpId
 
 
 class OperationManager():
@@ -45,25 +45,11 @@ class OperationManager():
             plugin.register_operation_callback(self.register_plugin_operation)
 
     def _save_and_send_results(self, operation):
-        # Check for self assigned operation IDs and send emtpy string
-        # to server if present.
-        op_id = operation.id
-        if SelfGeneratedOpId in operation.id:
-            operation.id = ""
-
-        #logger.debug("*** RAW RESULT: {0}".format(operation.raw_result))
-
-        # TODO: remove
-        #v = json.loads(operation.raw_result)
-        #print json.dumps(v, indent=4)
-
         result = self._send_results(
             operation.raw_result,
-            operation.urn_response,
+            operation.response_uri,
             operation.request_method
         )
-
-        operation.id = op_id
 
         # Result was actually sent, write to db
         if result:
@@ -107,10 +93,20 @@ class OperationManager():
     ###################### THE BIG OPERATION PROCESSOR!! ######################
     ###########################################################################
     def process_operation(self, operation):
+
         try:
             if not isinstance(operation, SofOperation):
                 operation = SofOperation(operation)
 
+        except Exception as e:
+            logger.error(
+                "Failed to convert str to operation: {0}".format(operation)
+            )
+            logger.exception(e)
+            self._major_failure(operation, e)
+            return
+
+        try:
             if not operation.agent_queue_ttl_valid():
                 logger.info(
                     "Operation past its agent queue ttl: {0}"
@@ -164,9 +160,10 @@ class OperationManager():
 
     def new_agent_op(self, operation):
         operation = self._initial_data(operation)
-        operation.raw_result = self._initial_formatter(operation)
-        operation.urn_response = CoreUrn.get_new_agent_urn()
+        operation.response_uri = CoreUris.get_new_agent_uri()
         operation.request_method = RequestMethod.POST
+        #operation.raw_result = self._initial_formatter(operation)
+        operation.raw_result = operation.to_json()
 
         try:
             modified_json = json.loads(operation.raw_result)
@@ -184,9 +181,10 @@ class OperationManager():
 
     def startup_op(self, operation):
         operation = self._initial_data(operation)
-        operation.raw_result = self._initial_formatter(operation)
-        operation.urn_response = CoreUrn.get_startup_urn()
+        operation.response_uri = CoreUris.get_startup_uri()
         operation.request_method = RequestMethod.PUT
+        #operation.raw_result = self._initial_formatter(operation)
+        operation.raw_result = operation.to_json()
 
         self.add_to_result_queue(operation)
 
@@ -275,6 +273,7 @@ class OperationManager():
         self._plugins[operation.plugin].run_operation(operation)
 
     def _initial_data(self, operation):
+        operation.rebooted = self._is_boot_up()
         operation.core_data[OperationValue.SystemInfo] = self.system_info()
         operation.core_data[OperationValue.HardwareInfo] = self.hardware_info()
 
@@ -331,7 +330,7 @@ class OperationManager():
 
         operation = SofOperation()
         operation.raw_result = json.dumps(root)
-        operation.urn_response = CoreUrn.get_reboot_urn()
+        operation.response_uri = CoreUris.get_reboot_uri()
         operation.request_method = RequestMethod.PUT
 
         self.add_to_result_queue(operation)
@@ -366,7 +365,7 @@ class OperationManager():
 
         operation = SofOperation()
         operation.raw_result = json.dumps(root)
-        operation.urn_response = CoreUrn.get_shutdown_urn()
+        operation.response_uri = CoreUris.get_shutdown_uri()
         operation.request_method = RequestMethod.PUT
 
         self.add_to_result_queue(operation)
@@ -407,7 +406,7 @@ class OperationManager():
         else:
             operation.type = OperationValue.NewAgent
 
-        self.process_operation(operation.to_json())
+        self.process_operation(operation)
 
     def send_results_callback(self, callback):
         self._send_results = callback
@@ -433,9 +432,24 @@ class OperationManager():
         #    return self._operation_queue.put_non_duplicate(operation)
         try:
             if not isinstance(operation, SofOperation):
-                operation = SofOperation(json.dumps(op))
+                operation = SofOperation(json.dumps(operation))
 
             if not operation.server_queue_ttl_valid():
+                error = (
+                    "Operation {0} is past its server queue "
+                    "time to live.".format(operation.id)
+                )
+                logger.debug(error)
+
+                sofresult = SofResult(
+                    operation,
+                    'false',  # success
+                    'false',  # reboot required
+                    error,  # error
+                )
+
+                self.add_to_result_queue(sofresult)
+
                 return False
 
         except Exception as e:
@@ -506,10 +520,10 @@ class OperationManager():
         operation = result_operation.operation
 
         if result_operation.should_be_sent():
-            # No result means it hasn't been processed, no urn_response
+            # No result means it hasn't been processed, no response_uri
             # means unknown operation was received from server.
             if (operation.raw_result != settings.EmptyValue and
-                    operation.urn_response and operation.request_method):
+                    operation.response_uri and operation.request_method):
 
                 # Operation has been processed, send results to server
                 if (not self._save_and_send_results(operation) and
@@ -532,8 +546,8 @@ class OperationManager():
         Arguments:
 
         result_operation
-            An operation which must have a raw_result, urn_response,
-            and request_method attribute.
+            An operation which must have a raw_result, response_uri,
+            and request_method attributes.
 
         retry
             Determines if the result queue should continue attempting to send
