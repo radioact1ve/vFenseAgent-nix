@@ -74,10 +74,14 @@ def remove_compiled_pythons(agent_pkg_dir, platform):
 
 
 def modify_config_version(config_path, version):
-    f = open(config_path, 'r+')
-
+    f = open(config_path, 'r')
     try:
         file_content = f.read()
+    finally:
+        f.close()
+
+    f = open(config_path, 'w')
+    try:
         new_content = file_content.splitlines()
 
         for line in new_content:
