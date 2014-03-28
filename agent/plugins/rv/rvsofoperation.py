@@ -346,6 +346,24 @@ UninstallResult = namedtuple(
 class RvSofResult(RvSofOperation):
     """ Data structure for install/uninstall operation results. """
 
+    #def __init__(self, operation, app_id, apps_to_delete,
+    #             apps_to_add, success, reboot_required, error, data):
+
+    #    self.id = operation.id  # "uuid"
+    #    self.type = operation.type
+    #    self.success = success  # "true" or "false"
+    #    self.reboot_required = reboot_required  # "true" or "false"
+    #    self.error = error  # "error message"
+    #    self.app_id = app_id  # "36 char uuid or 64 char hash"
+    #    self.apps_to_delete = apps_to_delete
+    #    self.apps_to_add = apps_to_add
+    #    self.data = data  # Application instance in json
+
+    #    self.response_uri = operation.response_uri
+    #    self.request_method = operation.request_method
+
+    #    self.raw_result = self.to_json()
+
     def __init__(self, operation_id, operation_type, app_id, apps_to_delete,
                  apps_to_add, success, reboot_required, error, data,
                  urn_response, request_method):

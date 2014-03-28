@@ -128,8 +128,6 @@ class RvPlugin(AgentPlugin):
         update_dir = settings.UpdatesDirectory
         failed_to_download = False
 
-        urn_response = RvUrn.get_operation_urn(operation.type)
-
         try:
 
             self._download_packages(operation)
@@ -147,8 +145,7 @@ class RvPlugin(AgentPlugin):
                 error = 'Failed to download packages.'
 
             rvsof_result = RvSofResult(
-                operation.id,
-                operation.type,
+                operation,
                 '',  # app id
                 [],  # apps_to_delete
                 [],  # apps_to_add
@@ -156,8 +153,6 @@ class RvPlugin(AgentPlugin):
                 'false',  # restart
                 error,  # error
                 CreateApplication.null_application().to_dict(),  # app json
-                urn_response,
-                RequestMethod.PUT
             )
 
             self._send_results(rvsof_result)
@@ -173,7 +168,6 @@ class RvPlugin(AgentPlugin):
                 self._regular_update(operation, update_dir)
 
     def _regular_update(self, operation, update_dir):
-        urn_response = RvUrn.get_operation_urn(operation.type)
         install_method = self._get_install_method(operation.type)
 
         restart_needed = False
@@ -186,8 +180,7 @@ class RvPlugin(AgentPlugin):
                 restart_needed = True
 
             rvsof_result = RvSofResult(
-                operation.id,
-                operation.type,
+                operation,
                 install_data.id,  # app id
                 install_result.apps_to_delete,  # apps_to_delete
                 install_result.apps_to_add,  # apps_to_add
@@ -195,8 +188,6 @@ class RvPlugin(AgentPlugin):
                 install_result.restart,  # restart
                 install_result.error,  # error
                 install_result.app_json,  # app json
-                urn_response,
-                RequestMethod.PUT
             )
 
             # TODO: always leave commented out, or remove
@@ -215,7 +206,6 @@ class RvPlugin(AgentPlugin):
         self._restart_if_needed(operation.restart, restart_needed)
 
     def _agent_update(self, operation, update_dir):
-        urn_response = RvUrn.get_operation_urn(operation.type)
         install_method = self._get_install_method(operation.type)
         # TODO: remove this, only for testing
         #install_method = self._operation_handler.install_agent_update
@@ -231,8 +221,7 @@ class RvPlugin(AgentPlugin):
                 restart_needed = True
 
             rvsof_result = RvSofResult(
-                operation.id,
-                operation.type,
+                operation,
                 install_data.id,  # app id
                 install_result.apps_to_delete,  # apps_to_delete
                 install_result.apps_to_add,  # apps_to_add
@@ -240,8 +229,6 @@ class RvPlugin(AgentPlugin):
                 install_result.restart,  # restart
                 install_result.error,  # error
                 install_result.app_json,  # app json
-                urn_response,
-                RequestMethod.PUT
             )
 
             if rvsof_result.success != '':
@@ -305,14 +292,12 @@ class RvPlugin(AgentPlugin):
     def _uninstall_operation(self, operation):
 
         restart_needed = False
-        urn_response = RvUrn.get_operation_urn(operation.type)
 
         if not operation.uninstall_data_list:
             error = "No applications specified to uninstall."
 
             rvsof_result = RvSofResult(
-                operation.id,
-                operation.type,
+                operation,
                 '',  # app id
                 [],  # apps_to_delete
                 [],  # apps_to_add
@@ -320,8 +305,6 @@ class RvPlugin(AgentPlugin):
                 'false',  # restart
                 error,  # error
                 [],  # data
-                urn_response,
-                RequestMethod.PUT
             )
 
             self._send_results(rvsof_result)
@@ -337,8 +320,7 @@ class RvPlugin(AgentPlugin):
                     restart_needed = True
 
                 rvsof_result = RvSofResult(
-                    operation.id,
-                    operation.type,
+                    operation,
                     uninstall_data.id,  # app id
                     [],  # apps_to_delete
                     [],  # apps_to_add
@@ -346,8 +328,6 @@ class RvPlugin(AgentPlugin):
                     uninstall_result.restart,  # restart
                     uninstall_result.error,  # error
                     [],  # data
-                    urn_response,
-                    RequestMethod.PUT
                 )
 
                 self._send_results(rvsof_result)
@@ -690,23 +670,6 @@ class RvPlugin(AgentPlugin):
         agent_app = self.get_agent_app()
         if agent_app:
             data.append(agent_app.to_dict())
-
-        ### TODO(remove): remove or leave commented
-        #try:
-        #    with open('all_data_rpm6', 'w') as _file:
-        #        json.dump({'data': data}, _file, indent=4)
-        #except Exception:
-        #    pass
-        ############################################
-
-        ## TODO(remove): remove or leave commented
-        #all_data = {}
-
-        #with open('all_data', 'r') as _file:
-        #    all_data = json.load(_file)
-
-        #return all_data
-        #############################################
 
         return data
 
