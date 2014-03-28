@@ -219,16 +219,16 @@ class RvSofOperation(SofOperation):
         # TODO: Fix hack. Lazy to use rvplugin module because of circular deps.
         self.plugin = 'rv'
         self.cpu_priority = self._get_cpu_priority()
-        self.net_throttle = self.json_message[RvOperationKey.NetThrottle]
+        self.net_throttle = self.json_message.get(
+            RvOperationKey.NetThrottle, 0
+        )
 
         if self.type in RvOperationValue.InstallOperations:
 
             self.install_data_list = self._load_install_data()
-            if RvOperationKey.Restart in self.json_message:
-
-                self.restart = self.json_message[RvOperationKey.Restart]
-            else:
-                self.restart = RvOperationValue.IgnoredRestart
+            self.restart = self.json_message.get(
+                RvOperationKey.Restart, RvOperationValue.IgnoredRestart
+            )
 
         elif self.type == RvOperationValue.Uninstall:
 
