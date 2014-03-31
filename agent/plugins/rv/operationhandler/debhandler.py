@@ -128,7 +128,7 @@ class DebianHandler():
             'required': critical,
             'important': critical,
             'optional': recommended,
-            'standard': optional,  # TODO: should this be recommended as well?
+            'standard': recommended,
             'extra': optional
         }
 
