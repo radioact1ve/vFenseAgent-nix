@@ -56,24 +56,26 @@ class Application():
         Returns a dictionary of the applications' attributes.
         """
 
-        root = {"name": self.name,
-                "vendor_name": self.vendor_name,
-                "description": self.description,
-                "version": self.version,
-                "file_data": self.file_data,
-                "dependencies": self.dependencies,
-                "support_url": self.support_url,
-                "vendor_severity": self.vendor_severity,
-                "kb": self.kb,
-                "repo": self.repo,
-                #"vendor_id" : self.vendor_id, TODO: figure out if this guy is needed
-                "install_date": self.install_date,
-                "release_date": self.release_date,
-                "status": self.status,
-                "reboot_required": self.reboot_required,
-                "uninstallable": self.uninstallable}
+        app_dict = {
+            "name": self.name,
+            "vendor_name": self.vendor_name,
+            "description": self.description,
+            "version": self.version,
+            "file_data": self.file_data,
+            "dependencies": self.dependencies,
+            "support_url": self.support_url,
+            "vendor_severity": self.vendor_severity,
+            "kb": self.kb,
+            "repo": self.repo,
+            #"vendor_id" : self.vendor_id, TODO: figure out if this guy is needed
+            "install_date": self.install_date,
+            "release_date": self.release_date,
+            "status": self.status,
+            "reboot_required": self.reboot_required,
+            "uninstallable": self.uninstallable
+        }
 
-        return root
+        return app_dict
 
 
 class CreateApplication():
@@ -114,14 +116,17 @@ class CreateApplication():
 
     @staticmethod
     def set_installed(installed):
-        if installed == 'installed':
-            return 'installed'
+        inst = 'installed'
+        avail = 'available'
+
+        if installed == inst:
+            return inst
         elif installed == 'true':
-            return 'installed'
+            return inst
         elif installed is True:
-            return 'installed'
+            return inst
         else:
-            return 'available'
+            return avail
 
     @staticmethod
     def _get_date_for_app(date_obj):
