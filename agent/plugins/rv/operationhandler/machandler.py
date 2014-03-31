@@ -24,7 +24,7 @@ class MacOpHandler():
         # Initialize mac table stuff.
         #self._macsqlite = SqliteMac()
         #self._macsqlite.recreate_update_data_table()
-        self.utilcmds = utilcmds.UtilCmds()
+        self.softwareupdate = '/usr/sbin/softwareupdate'
 
         self._catalog_directory = \
             os.path.join(settings.AgentDirectory, 'catalogs')
@@ -35,6 +35,7 @@ class MacOpHandler():
         if not os.path.isdir(self._catalog_directory):
             os.mkdir(self._catalog_directory)
 
+        self.utilcmds = utilcmds.UtilCmds()
         self.pkg_installer = PkgInstaller()
         self.dmg_installer = DmgInstaller()
         self.plist = PlistInterface()
@@ -221,7 +222,7 @@ class MacOpHandler():
         return s.get_data()
 
     def _get_softwareupdate_data(self):
-        cmd = ['/usr/sbin/softwareupdate', '-l', '-f', self._updates_plist]
+        cmd = [self.softwareupdate, '-l', '-f', self._updates_plist]
 
         # Little trick to hide the command's output from terminal.
         with open(os.devnull, 'w') as dev_null:
@@ -232,8 +233,24 @@ class MacOpHandler():
 
         return output
 
+    def _append_update_priorities(self, app_dicts):
+        list_data, _ = self.utilcmds.run_command([self.softwareupdate, '-l'])
+
+        for app_dict in app_dicts:
+            # default
+            app_dict['vendor_severity'] = 'optional'
+
+            for line in list_data.splitlines():
+                if app_dict['name'] in line:
+                    # TODO: figure out what other priorities arise
+                    # from the 'softwareupdate -l' command
+                    if '[recommended]' in line:
+                        app_dict['vendor_severity'] = 'recommended'
+
     def create_apps_from_plist_dicts(self, app_dicts):
         applications = []
+
+        self._append_update_priorities(app_dicts)
 
         for app_dict in app_dicts:
             try:
@@ -243,21 +260,21 @@ class MacOpHandler():
 
                 app_name = app_dict['name']
 
-                release_date = self._get_package_release_date(app_name)
+                # Just in case there's HTML, strip it out
+                # and get rid of newlines.
+                description = MacOpHandler._strip_body_tags(
+                    app_dict['description']
+                ).replace('\n', '')
                 file_data = self._get_file_data(app_name)
+                release_date = self._get_package_release_date(app_name)
 
                 dependencies = []
 
                 app_inst = CreateApplication.create(
                     app_name,
                     app_dict['version'],
-
-                    # Just in case there's HTML, strip it out
-                    MacOpHandler._strip_body_tags(app_dict['description'])
-                    # and get rid of newlines.
-                    .replace('\n', ''),
-
-                    file_data,  # file_data
+                    description,
+                    file_data,
                     dependencies,
                     '',  # support_url
                     '',  # vendor_severity
@@ -265,7 +282,7 @@ class MacOpHandler():
                     app_dict['productKey'],  # vendor_id
                     'Apple',  # vendor_name
                     None,  # install_date
-                    release_date,  # release_date
+                    release_date,
                     False,  # installed
                     '',  # repo
                     app_dict['restartRequired'].lower(),  # reboot_required
@@ -459,7 +476,7 @@ class MacOpHandler():
         error = 'Could not install pkgs.'
 
         if pkgs:
-            # TODO(urgent): what to do with multiple pkgs?
+            # TODO: what to do with multiple pkgs?
             for pkg in pkgs:
                 success, error = self.pkg_installer.installer(pkg)
 
