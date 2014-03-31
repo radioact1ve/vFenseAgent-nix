@@ -128,7 +128,8 @@ class OperationManager():
                 OperationValue.Startup: self.startup_op,
                 OperationValue.NewAgentId: self.new_agent_id_op,
                 OperationValue.Reboot: self.reboot_op,
-                OperationValue.Shutdown: self.shutdown_op
+                OperationValue.Shutdown: self.shutdown_op,
+                OperationValue.UpdateReponseUris: self.update_response_uris_op
             }
 
             if operation.type in operation_methods:
@@ -268,6 +269,9 @@ class OperationManager():
 
         netmanager.allow_checkin = True
         logger.debug("Checkin set to: {0}".format(netmanager.allow_checkin))
+
+    def update_response_uris_op(self, operation):
+        uris = json.loads(operation.data)
 
     def plugin_op(self, operation):
         self._plugins[operation.plugin].run_operation(operation)

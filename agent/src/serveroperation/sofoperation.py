@@ -10,16 +10,17 @@ except ImportError:
 
 class OperationValue():
     # The corresponding SOF equivalent. (Case sensitive)
+    Reboot = 'reboot'
+    Startup = 'startup'
+    CheckIn = 'check_in'
+    Shutdown = 'shutdown'
     NewAgent = 'new_agent'
     NewAgentId = 'new_agent_id'
-    Startup = 'startup'
-    Reboot = 'reboot'
-    Shutdown = 'shutdown'
     InvalidAgentId = 'invalid_agent_id'
-    CheckIn = 'check_in'
+    UpdateReponseUris = 'update_response_uris'
 
-    SystemInfo = 'system_info'
     HardwareInfo = 'hardware'
+    SystemInfo = 'system_info'
 
     Result = 'result'
 
@@ -59,6 +60,18 @@ class RequestMethod():
     GET = 'GET'
     POST = 'POST'
     PUT = 'PUT'
+
+
+class ResponseUris():
+    NewAgent = 'rvl/v1/core/newagent'
+    Login = 'rvl/login'
+    Logout = 'rvl/logout'
+
+    ServerSetUris = {}
+
+    @staticmethod
+    def get_response_uri(operation_type):
+        return ServerSetUris.get(operation_type, None)
 
 
 class CoreUris():
