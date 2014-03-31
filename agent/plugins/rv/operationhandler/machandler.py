@@ -265,6 +265,7 @@ class MacOpHandler():
                 description = MacOpHandler._strip_body_tags(
                     app_dict['description']
                 ).replace('\n', '')
+
                 file_data = self._get_file_data(app_name)
                 release_date = self._get_package_release_date(app_name)
 
@@ -277,7 +278,7 @@ class MacOpHandler():
                     file_data,
                     dependencies,
                     '',  # support_url
-                    '',  # vendor_severity
+                    app_dict.get('vendor_severity', ''),
                     '',  # file_size
                     app_dict['productKey'],  # vendor_id
                     'Apple',  # vendor_name
