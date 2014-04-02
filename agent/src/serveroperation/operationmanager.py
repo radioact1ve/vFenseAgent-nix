@@ -53,12 +53,6 @@ class OperationManager():
         if SelfGeneratedOpId in operation.id:
             operation.id = ""
 
-        #logger.debug("*** RAW RESULT: {0}".format(operation.raw_result))
-
-        # TODO: remove
-        #v = json.loads(operation.raw_result)
-        #print json.dumps(v, indent=4)
-
         result = self._send_results(
             operation.raw_result,
             operation.urn_response,
@@ -408,7 +402,7 @@ class OperationManager():
         else:
             operation.type = OperationValue.NewAgent
 
-        self.process_operation(operation.to_json())
+        self.process_operation(operation)
 
     def send_results_callback(self, callback):
         self._send_results = callback

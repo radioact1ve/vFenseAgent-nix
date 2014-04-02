@@ -691,23 +691,6 @@ class RvPlugin(AgentPlugin):
         if agent_app:
             data.append(agent_app.to_dict())
 
-        ### TODO(remove): remove or leave commented
-        #try:
-        #    with open('all_data_rpm6', 'w') as _file:
-        #        json.dump({'data': data}, _file, indent=4)
-        #except Exception:
-        #    pass
-        ############################################
-
-        ## TODO(remove): remove or leave commented
-        #all_data = {}
-
-        #with open('all_data', 'r') as _file:
-        #    all_data = json.load(_file)
-
-        #return all_data
-        #############################################
-
         return data
 
     def refresh_apps_operation(self, operation):

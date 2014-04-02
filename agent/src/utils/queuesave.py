@@ -23,7 +23,7 @@ def save_queue(queue, file_path, protocol=-1):
     savable_dump = []
     for op in queue_dump:
         if isinstance(op, SofOperation) or isinstance(op, ResultOperation):
-            if op._is_savable():
+            if op.is_savable():
                 savable_dump.append(op)
 
             else:

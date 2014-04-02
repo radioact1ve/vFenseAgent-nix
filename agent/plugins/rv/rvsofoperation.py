@@ -320,8 +320,8 @@ class RvSofOperation(SofOperation):
 
         return uninstall_data_list
 
-    def _is_savable(self):
-        if not super(RvSofOperation, self)._is_savable():
+    def is_savable(self):
+        if not super(RvSofOperation, self).is_savable():
             return False
 
         non_savable = [RvOperationValue.RefreshApps]

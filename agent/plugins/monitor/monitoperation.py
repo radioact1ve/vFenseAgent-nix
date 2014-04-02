@@ -64,8 +64,8 @@ class MonitOperation(SofOperation):
 
         self.file_system = []
 
-    def _is_savable(self):
-        if not super(MonitOperation, self)._is_savable():
+    def is_savable(self):
+        if not super(MonitOperation, self).is_savable():
             return False
 
         non_savable = [MonitOperationValue.MonitorData]

@@ -45,7 +45,6 @@ class OperationKey():
 
 
 class OperationError():
-
     pass
 
 
@@ -121,7 +120,6 @@ class SofOperation(object):
             self._load_message(message)
 
         else:
-
             self.json_message = settings.EmptyValue
 
             self.id = self.self_assigned_id()
@@ -144,7 +142,7 @@ class SofOperation(object):
 
         self.raw_operation = message
 
-    def _is_savable(self):
+    def is_savable(self):
         non_savable = [OperationValue.Reboot, OperationValue.Shutdown,
                        OperationValue.Startup, OperationValue.NewAgent]
 
@@ -154,29 +152,7 @@ class SofOperation(object):
         return True
 
     def self_assigned_id(self):
-
         return str(uuid.uuid4()) + SelfGeneratedOpId
-
-    def add_result(self, result):
-        """
-        Adds the values of a SofResult to this operation instance.
-        @param result: SofResult object with the operation results.
-        @return: Nothing
-        """
-
-        root = {}
-        root[OperationKey.RvId] = result.id
-        root[OperationKey.Success] = str(result.successful).lower()
-
-        if result.successful:
-            root[OperationKey.Reboot] = str(result.restart).lower()
-        else:
-            root[OperationKey.Error] = result.specific_message
-
-        self.data.append(root)
-
-    def add_dependency(self, deps):
-        self.data.append(deps)
 
     def to_json(self):
         """Converts operation to a JSON formatted string.
@@ -192,13 +168,13 @@ class SofOperation(object):
             - Returns the basic properties of an operation in JSON string.
         """
 
-        root = {}
+        json_dict = {
+            OperationKey.Operation: self.type,
+            OperationKey.OperationId: self.id,
+            OperationKey.Plugin: self.plugin
+        }
 
-        root[OperationKey.Operation] = self.type
-        root[OperationKey.OperationId] = self.id
-        root[OperationKey.Plugin] = self.plugin
-
-        return json.dumps(root)
+        return json.dumps(json_dict)
 
 
 class ResultOperation():
@@ -251,7 +227,7 @@ class ResultOperation():
 
         return False
 
-    def _is_savable(self):
+    def is_savable(self):
         non_savable = [OperationValue.Startup, OperationValue.NewAgent]
 
         if self.operation.type in non_savable:
@@ -260,7 +236,6 @@ class ResultOperation():
         return True
 
     def self_assigned_id(self):
-
         return str(uuid.uuid4()) + SelfGeneratedOpId
 
 
