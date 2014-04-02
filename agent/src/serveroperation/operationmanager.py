@@ -107,10 +107,18 @@ class OperationManager():
     def process_operation(self, operation):
 
         try:
-
             if not isinstance(operation, SofOperation):
                 operation = SofOperation(operation)
 
+        except Exception as e:
+            logger.error(
+                    "Failed to convert str to operation: {0}".format(operation)
+            )
+            logger.exception(e)
+            self._major_failure(operation, e)
+            return
+
+        try:
             logger.info(
                 "Process the following operation: {0}"
                 .format(operation.__dict__)
@@ -128,7 +136,6 @@ class OperationManager():
             }
 
             if operation.type in operation_methods:
-
                 # Call method
                 operation_methods[operation.type](operation)
 
@@ -136,14 +143,12 @@ class OperationManager():
                 self.plugin_op(operation)
 
             else:
-
                 raise Exception(
                     'Operation/Plugin {0} was not found.'
                     .format(operation.__dict__)
                 )
 
         except Exception as e:
-
             logger.error(
                 "Error while processing operation: {0}"
                 .format(operation.__dict__)
@@ -553,14 +558,12 @@ class OperationManager():
     def server_response_processor(self, message):
 
         if message:
-
             for op in message.get('data', []):
 
                 # Loading operation for server in order for the queue
                 # dump to know if an operation is savable to file.
 
                 try:
-
                     operation = SofOperation(json.dumps(op))
                     self.add_to_operation_queue(operation)
 
@@ -574,17 +577,18 @@ class OperationManager():
 
     def system_info(self):
 
-        root = {}
-        root['os_code'] = systeminfo.code()
-        root['os_string'] = systeminfo.name()
-        root['version'] = systeminfo.version()
-        root['bit_type'] = systeminfo.bit_type()
-        root['computer_name'] = systeminfo.computer_name()
-        root['host_name'] = ''  # TODO(urgent): Implement
+        sys_info = {
+            'os_code': systeminfo.code(),
+            'os_string': systeminfo.name(),
+            'version': systeminfo.version(),
+            'bit_type': systeminfo.bit_type(),
+            'computer_name': systeminfo.computer_name(),
+            'host_name': ''  # TODO: Implement
+        }
 
-        logger.debug("System info sent: {0}".format(json.dumps(root)))
+        logger.debug("System info sent: {0}".format(json.dumps(sys_info)))
 
-        return root
+        return sys_info
 
     def hardware_info(self):
         hardware_info = systeminfo.hardware()
@@ -630,11 +634,7 @@ class OperationManager():
             f.write(str(uptime))
 
     def _is_boot_up(self):
-        """Checks whether if the agent is coming up because of a reboot or not.
-
-        Returns:
-            (bool) True if system boot up detected, False otherwise.
-        """
+        """ Checks if the agent is coming up because of a reboot. """
 
         current_uptime = systeminfo.uptime()
         boot_up = 'no'
@@ -646,11 +646,9 @@ class OperationManager():
                     file_uptime = f.read()
 
                     if current_uptime < long(file_uptime):
-
                         boot_up = 'yes'
 
         except Exception as e:
-
             logger.error("Could not verify system bootup.")
             logger.exception(e)
 

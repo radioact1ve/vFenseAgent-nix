@@ -246,8 +246,6 @@ class SofResult():
     def __init__(self, rv_id='', successful=False, restart=False, message=''):
 
         self.id = rv_id
-        # TODO: Preparing for changes with app names
-#        self.name = app_name
         self.successful = successful
         self.restart = restart
         self.specific_message = message
