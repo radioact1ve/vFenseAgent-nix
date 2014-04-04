@@ -602,7 +602,7 @@ class OperationManager():
         self._save_uptime()
 
         warning = "In %s minute(s), this computer will be restarted " \
-                  "on behalf of the TopPatch Server." % delay_minutes
+                  "on behalf of the vFense Server." % delay_minutes
 
         subprocess.call(
             ['/sbin/shutdown', '-r', '+%s' % delay_minutes, warning]
@@ -612,7 +612,7 @@ class OperationManager():
         self._save_uptime()
 
         warning = "In %s minute(s), this computer will be shutdown " \
-                  "on behalf of the TopPatch Server." % delay_minutes
+                  "on behalf of the vFense Server." % delay_minutes
 
         subprocess.call(
             ['/sbin/shutdown', '-h', '+%s' % delay_minutes, warning]

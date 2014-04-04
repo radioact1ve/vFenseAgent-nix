@@ -571,7 +571,7 @@ class RpmOpHandler():
         installed_apps = []
 
         # Get the data in a nice, easy, parsable format.
-        query_separator = '**!TOPPATCH!**'
+        query_separator = '**!VFENSE!**'
         query_format = (
             '"%{{NAME}}{0}%{{VERSION}}-%{{RELEASE}}{0}%{{INSTALLTIME}}'
             '{0}%{{BUILDTIME}}{0}%{{SIZE}}{0}%{{VENDOR}}{0}'

@@ -795,4 +795,4 @@ class RvPlugin(AgentPlugin):
 
 if __name__ == "__main__":
     print ("This plugin is not meant to be run directly."
-           " Please run it with the core TopPatch agent.")
+           " Please run it with the core vFense agent.")

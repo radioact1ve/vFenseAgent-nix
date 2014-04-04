@@ -15,27 +15,13 @@ from net.netmanager import NetManager
 from serveroperation.operationmanager import OperationManager
 from agentplugin import AgentPlugin
 
-# def _append_deps_paths():
-#
-#     try:
-#
-#         import sys
-#
-#         deps_dir = os.path.join(settings.AgentDirectory, 'deps')
-#         sys.path.append(deps_dir)
-#
-#     except Exception as e:
-#
-#         logger.warning("Unable to load agent dependencies. Stuff might break.")
-#         logger.exception(e)
-
 
 class MainCore():
 
     def __init__(self, app_name):
 
         if os.geteuid() != 0:
-            sys.exit("TopPatch Agent must be run as root.")
+            sys.exit("vFense Agent must be run as root.")
 
         self.app_name = app_name
         self.registered_plugins = {}
@@ -116,20 +102,17 @@ class MainCore():
         return plugins
 
     def register_plugins(self):
-
         for plugin in self.found_plugins:
             self.registered_plugins[plugin.name()] = plugin
 
     def internet_on(self):
 
         try:
-
             urllib2.urlopen('http://www.google.com', timeout=3)
             logger.debug('Internet connection detected.')
             return True
 
         except Exception as e:
-
             logger.debug('No internet connection detected.')
             logger.exception(e)
             return False

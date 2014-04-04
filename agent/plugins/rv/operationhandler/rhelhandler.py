@@ -187,7 +187,7 @@ class YumParse():
 
     def _get_matching_severity(self, severity):
         """
-        Gets the corresponding TopPatch severity for each package.
+        Gets the corresponding vFense severity for each package.
 
         Returns:
             security -> Critical
