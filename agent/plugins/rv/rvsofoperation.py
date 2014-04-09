@@ -25,86 +25,13 @@ class RvOperationValue():
     ApplicationsInstalled = 'applications_installed'
     RefreshApps = 'updatesapplications'
 
-    AgentLogRetrieval = 'agent_log_retrieval'
+    #AgentLogRetrieval = 'agent_log_retrieval'
 
     ThirdPartyInstall = 'third_party_install'
-
-    ExecuteCommand = 'execute_command'
 
     IgnoredRestart = 'none'
     OptionalRestart = 'needed'
     ForcedRestart = 'force'
-
-
-class RvUrn():
-    """
-    This class is directly linked with the install/uninstall operations.
-    """
-
-    # URN's Must not start with a '/'
-
-    InstallResult = 'rvl/rv/install/results'
-
-    # Replace the {0} with agent id
-    InstallUpdateResult = 'rvl/v1/{0}/rv/results/install/apps/os'
-    InstallSupportedApps = 'rvl/v1/{0}/rv/results/install/apps/supported'
-    InstallCustomApps = 'rvl/v1/{0}/rv/results/install/apps/custom'
-    InstallAgentUpdate = 'rvl/v1/{0}/rv/results/install/apps/agent'
-
-    UninstallResult = 'rvl/v1/{0}/rv/results/uninstall'
-
-    RefreshApps = 'rvl/v1/{0}/rv/updatesapplications'
-
-    # TODO: Implement
-    AgentLogRetrieval = 'somedestination'
-
-    @staticmethod
-    def get_operation_urn(op_name):
-        if RvOperationValue.InstallUpdate == op_name:
-            return RvUrn.get_install_update_result_urn()
-
-        if RvOperationValue.InstallSupportedApps == op_name: 
-            return RvUrn.get_install_supported_apps_urn()
-
-        if RvOperationValue.InstallCustomApps == op_name:
-            return RvUrn.get_install_custom_apps_urn()
-
-        if RvOperationValue.InstallAgentUpdate == op_name: 
-            return RvUrn.get_install_agent_update_urn()
-
-        if RvOperationValue.Uninstall == op_name: 
-            return RvUrn.get_uninstall_result_urn()
-
-        if RvOperationValue.RefreshApps == op_name: 
-            return RvUrn.get_refresh_apps_urn()
-
-    @staticmethod
-    def get_install_update_result_urn():
-        return RvUrn.InstallUpdateResult.format(settings.AgentId)
-
-    @staticmethod
-    def get_install_supported_apps_urn():
-        return RvUrn.InstallSupportedApps.format(settings.AgentId)
-
-    @staticmethod
-    def get_install_custom_apps_urn():
-        return RvUrn.InstallCustomApps.format(settings.AgentId)
-
-    @staticmethod
-    def get_install_agent_update_urn():
-        return RvUrn.InstallAgentUpdate.format(settings.AgentId)
-
-    @staticmethod
-    def get_uninstall_result_urn():
-        return RvUrn.UninstallResult.format(settings.AgentId)
-
-    @staticmethod
-    def get_refresh_apps_urn():
-        return RvUrn.RefreshApps.format(settings.AgentId)
-
-    @staticmethod
-    def get_agent_log_retrieval_urn():
-        return RvUrn.AgentLogRetrieval
 
 
 class RvOperationKey():
@@ -214,28 +141,26 @@ class RvSofOperation(SofOperation):
     def __init__(self, message=None):
         super(RvSofOperation, self).__init__(message)
 
-        self.applications = []
-
         # TODO: Fix hack. Lazy to use rvplugin module because of circular deps.
         self.plugin = 'rv'
+
+        self.applications = []
+
         self.cpu_priority = self._get_cpu_priority()
         self.net_throttle = self.json_message.get(
             RvOperationKey.NetThrottle, 0
         )
 
         if self.type in RvOperationValue.InstallOperations:
-
             self.install_data_list = self._load_install_data()
             self.restart = self.json_message.get(
                 RvOperationKey.Restart, RvOperationValue.IgnoredRestart
             )
 
         elif self.type == RvOperationValue.Uninstall:
-
             self.uninstall_data_list = self._load_uninstall_data()
 
         elif self.type == RvOperationValue.ThirdPartyInstall:
-
             self.cli_options = self.json_message[RvOperationKey.CliOptions]
             self.package_urn = self.json_message[RvOperationKey.Uris]
 
@@ -300,16 +225,15 @@ class RvSofOperation(SofOperation):
 
             if RvOperationKey.FileData in self.json_message:
                 data_list = self.json_message[RvOperationKey.FileData]
+
             else:
                 data_list = []
 
             for data in data_list:
-
                 uninstall_data = UninstallData()
 
                 uninstall_data.name = data[RvOperationKey.Name]
                 uninstall_data.id = data[RvOperationKey.AppId]
-                #uninstall_data.cli_options = data.get(RvOperationKey.CliOptions, '')
 
                 uninstall_data_list.append(uninstall_data)
 
@@ -344,15 +268,14 @@ UninstallResult = namedtuple(
 )
 
 
-# TODO: should I be inheriting from RvSofOperation?
-class RvSofResult(RvSofOperation):
+class RvSofResult():
     """ Data structure for install/uninstall operation results. """
 
     def __init__(self, operation_id, operation_type, app_id, apps_to_delete,
-                 apps_to_add, success, reboot_required, error, data,
-                 urn_response, request_method):
+                 apps_to_add, success, reboot_required, error, data):
 
         self.id = operation_id  # "uuid"
+        self.type = operation_type
         self.success = success  # "true" or "false"
         self.reboot_required = reboot_required  # "true" or "false"
         self.error = error  # "error message"
@@ -360,24 +283,23 @@ class RvSofResult(RvSofOperation):
         self.apps_to_delete = apps_to_delete
         self.apps_to_add = apps_to_add
         self.data = data  # Application instance in json
-        self.urn_response = urn_response
-        self.request_method = request_method
 
-        self.type = operation_type
         self.raw_result = self.to_json()
 
     def to_json(self):
-        root = {"operation_id": self.id,
-                "operation": self.type,
-                "success": self.success,
-                "reboot_required": self.reboot_required,
-                "error": self.error,
-                "app_id": self.app_id,
-                "apps_to_delete": self.apps_to_delete,
-                "apps_to_add": self.apps_to_add,
-                "data": self.data}
+        json_dict = {
+            "operation_id": self.id,
+            "operation": self.type,
+            "success": self.success,
+            "reboot_required": self.reboot_required,
+            "error": self.error,
+            "app_id": self.app_id,
+            "apps_to_delete": self.apps_to_delete,
+            "apps_to_add": self.apps_to_add,
+            "data": self.data
+        }
 
-        return json.dumps(root)
+        return json.dumps(json_dict)
 
     def update_raw_result(self):
         self.raw_result = self.to_json()

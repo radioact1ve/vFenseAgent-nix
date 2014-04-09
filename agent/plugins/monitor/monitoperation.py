@@ -30,16 +30,6 @@ class MonitError(OperationError):
     pass
 
 
-class MonitUrn():
-
-    # Must not start with a '/'
-    MonitorData = 'rvl/v1/{0}/monitoring/monitordata'
-
-    @staticmethod
-    def get_monit_data_urn():
-        return MonitUrn.MonitorData.format(settings.AgentId)
-
-
 class MonitOperation(SofOperation):
 
     def __init__(self, message=None):
@@ -47,8 +37,6 @@ class MonitOperation(SofOperation):
 
         # TODO: Fix hack. Lazy to use monitplugin module b/c of circular deps.
         self.plugin = 'monitor'
-        self.urn_response = ''
-        self.request_method = ''
 
         # TODO: these are no longer used, is that a good idea?
         self.memory = {

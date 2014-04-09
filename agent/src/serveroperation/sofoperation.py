@@ -17,6 +17,9 @@ class OperationValue():
     Shutdown = 'shutdown'
     InvalidAgentId = 'invalid_agent_id'
     CheckIn = 'check_in'
+    Login = 'login'
+    Logout = 'logout'
+    RefreshResponseUris = 'refresh_response_uris'
 
     SystemInfo = 'system_info'
     HardwareInfo = 'hardware'
@@ -43,6 +46,9 @@ class OperationKey():
     Core = 'core'
     Plugins = 'plugins'
 
+    ResponseUri = 'response_uri'
+    RequestMethod = 'request_method'
+
 
 class OperationError():
     pass
@@ -54,48 +60,40 @@ class RequestMethod():
     PUT = 'PUT'
 
 
-class CoreUrn():
+class ResponseUris():
 
-    # *********************************************************
-    # IMPORTANT: Use the provided methods to get the attributes.
-    # *********************************************************
-
-    # Must not start with a '/'
-    Reboot = 'rvl/v1/{0}/core/results/reboot'
-    Shutdown = 'rvl/v1/{0}/core/results/shutdown'
-    Checkin = 'rvl/v1/{0}/core/checkin'
-    Startup = 'rvl/v1/{0}/core/startup'
-    NewAgent = 'rvl/v1/core/newagent'
-    Login = 'rvl/login'
-    Logout = 'rvl/logout'
-
-    @staticmethod
-    def get_checkin_urn():
-        return CoreUrn.Checkin.format(settings.AgentId)
-
-    @staticmethod
-    def get_reboot_urn():
-        return CoreUrn.Reboot.format(settings.AgentId)
-
-    @staticmethod
-    def get_shutdown_urn():
-        return CoreUrn.Shutdown.format(settings.AgentId)
+    # This dictionary is refreshed on a refresh response uri operation
+    ResponseDict = {
+        OperationValue.NewAgent: {
+            OperationKey.ResponseUri: 'rvl/v1/core/newagent',
+            OperationKey.RequestMethod: RequestMethod.PUT
+        },
+        OperationValue.Startup: {
+            OperationKey.ResponseUri:
+                'rvl/v1/{0}/core/startup'.format(settings.AgentId),
+            OperationKey.RequestMethod: RequestMethod.PUT
+        },
+        OperationValue.Login: {
+            OperationKey.ResponseUri: 'rvl/v1/login',
+            OperationKey.RequestMethod: RequestMethod.POST
+        },
+        OperationValue.Logout: {
+            OperationKey.ResponseUri: 'rvl/v1/logout',
+            OperationKey.RequestMethod: RequestMethod.GET
+        }
+    }
 
     @staticmethod
-    def get_startup_urn():
-        return CoreUrn.Startup.format(settings.AgentId)
+    def get_response_uri(operation_type):
+        return ResponseUris.ResponseDict \
+            .get(operation_type, {}) \
+            .get(OperationKey.ResponseUri, '')
 
     @staticmethod
-    def get_new_agent_urn():
-        return CoreUrn.NewAgent
-
-    @staticmethod
-    def get_login_urn():
-        return CoreUrn.Login
-
-    @staticmethod
-    def get_logout_urn():
-        return CoreUrn.Logout
+    def get_request_method(operation_type):
+        return ResponseUris.ResponseDict \
+            .get(operation_type, {}) \
+            .get(OperationKey.RequestMethod, '')
 
 
 SelfGeneratedOpId = '-agent'
@@ -112,9 +110,6 @@ class SofOperation(object):
         self.reboot_delay_seconds = 90
         self.shutdown_delay_seconds = 90
         self.error = settings.EmptyValue
-
-        self.urn_response = ''
-        self.request_method = ''
 
         if message:
             self._load_message(message)
@@ -189,8 +184,7 @@ class ResultOperation():
         Arguments:
 
         operation
-            An object which MUST contain a raw_result, urn_response,
-            and request_method attribute.
+            An object which must contain a raw_result.
 
         retry
             Tells the result loop whether or not to retry sending results

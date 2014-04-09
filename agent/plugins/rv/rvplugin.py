@@ -6,13 +6,12 @@ import json
 
 from agentplugin import AgentPlugin
 from rv.data.application import CreateApplication
-from utils import RepeatTimer, settings, logger, systeminfo
-from utils import uninstaller, throd
-from serveroperation.sofoperation import SofOperation, OperationKey
-from serveroperation.sofoperation import OperationValue, RequestMethod
+from utils import RepeatTimer, settings, logger, systeminfo, uninstaller, throd
+from serveroperation.sofoperation import SofOperation, OperationKey, \
+    OperationValue
+from rvsofoperation import RvSofOperation, RvError, RvOperationValue, \
+    RvOperationKey, RvSofResult
 
-from rvsofoperation import RvSofOperation, RvUrn, RvError
-from rvsofoperation import RvOperationValue, RvOperationKey, RvSofResult
 import rvformatter
 
 
@@ -128,8 +127,6 @@ class RvPlugin(AgentPlugin):
         update_dir = settings.UpdatesDirectory
         failed_to_download = False
 
-        urn_response = RvUrn.get_operation_urn(operation.type)
-
         try:
 
             self._download_packages(operation)
@@ -155,9 +152,7 @@ class RvPlugin(AgentPlugin):
                 'false',  # success
                 'false',  # restart
                 error,  # error
-                CreateApplication.null_application().to_dict(),  # app json
-                urn_response,
-                RequestMethod.PUT
+                CreateApplication.null_application().to_dict()  # app json
             )
 
             self._send_results(rvsof_result)
@@ -173,7 +168,6 @@ class RvPlugin(AgentPlugin):
                 self._regular_update(operation, update_dir)
 
     def _regular_update(self, operation, update_dir):
-        urn_response = RvUrn.get_operation_urn(operation.type)
         install_method = self._get_install_method(operation.type)
 
         restart_needed = False
@@ -194,9 +188,7 @@ class RvPlugin(AgentPlugin):
                 install_result.successful,  # success
                 install_result.restart,  # restart
                 install_result.error,  # error
-                install_result.app_json,  # app json
-                urn_response,
-                RequestMethod.PUT
+                install_result.app_json  # app json
             )
 
             # TODO(urgent): always leave commented out, or remove
@@ -215,7 +207,6 @@ class RvPlugin(AgentPlugin):
         self._restart_if_needed(operation.restart, restart_needed)
 
     def _agent_update(self, operation, update_dir):
-        urn_response = RvUrn.get_operation_urn(operation.type)
         install_method = self._get_install_method(operation.type)
         # TODO(urgent): remove this, only for testing
         #install_method = self._operation_handler.install_agent_update
@@ -239,9 +230,7 @@ class RvPlugin(AgentPlugin):
                 install_result.successful,  # success
                 install_result.restart,  # restart
                 install_result.error,  # error
-                install_result.app_json,  # app json
-                urn_response,
-                RequestMethod.PUT
+                install_result.app_json  # app json
             )
 
             if rvsof_result.success != '':
@@ -303,9 +292,7 @@ class RvPlugin(AgentPlugin):
         logger.debug("Done attempting to uninstall agent.")
 
     def _uninstall_operation(self, operation):
-
         restart_needed = False
-        urn_response = RvUrn.get_operation_urn(operation.type)
 
         if not operation.uninstall_data_list:
             error = "No applications specified to uninstall."
@@ -319,9 +306,7 @@ class RvPlugin(AgentPlugin):
                 'false',  # success
                 'false',  # restart
                 error,  # error
-                [],  # data
-                urn_response,
-                RequestMethod.PUT
+                []  # data
             )
 
             self._send_results(rvsof_result)
@@ -345,9 +330,7 @@ class RvPlugin(AgentPlugin):
                     uninstall_result.success,  # success
                     uninstall_result.restart,  # restart
                     uninstall_result.error,  # error
-                    [],  # data
-                    urn_response,
-                    RequestMethod.PUT
+                    []  # data
                 )
 
                 self._send_results(rvsof_result)
@@ -389,9 +372,7 @@ class RvPlugin(AgentPlugin):
                     success,  # success
                     'false',  # restart
                     error,  # error
-                    "{}",  # app json
-                    RvUrn.get_install_agent_update_urn(),
-                    RequestMethod.PUT
+                    "{}"  # app json
                 )
 
                 logger.info(rvsof_result.__dict__)
@@ -703,8 +684,6 @@ class RvPlugin(AgentPlugin):
         raw[OperationKey.Data] = self.refresh_apps()
 
         operation.raw_result = json.dumps(raw)
-        operation.urn_response = RvUrn.get_refresh_apps_urn()
-        operation.request_method = RequestMethod.PUT
 
         self._send_results(operation)
 

@@ -1,13 +1,12 @@
 import os
 
 from agentplugin import AgentPlugin
-from serveroperation.sofoperation import RequestMethod
 from net import tunnels
 from utils import logger, settings
 
 from ra import formatter
 from ra import vine
-from ra.raoperation import RaOperation, RaValue, RaUrn
+from ra.raoperation import RaOperation, RaValue
 
 
 class RaPlugin(AgentPlugin):
@@ -60,8 +59,6 @@ class RaPlugin(AgentPlugin):
     def _set_rd_password(self, operation):
 
         logger.info('Setting remote desktop password.')
-        operation.urn_response = RaUrn.RdResults
-        operation.request_method = RequestMethod.POST
 
         error = ''
 
@@ -99,8 +96,6 @@ class RaPlugin(AgentPlugin):
     def _start_remote_desktop(self, operation):
 
         logger.info('Starting remote desktop.')
-        operation.urn_response = RaUrn.RdResults
-        operation.request_method = RequestMethod.POST
 
         vine_running = False
 
@@ -148,8 +143,6 @@ class RaPlugin(AgentPlugin):
     def _stop_remote_desktop(self, operation):
 
         logger.info('Stopping remote desktop')
-        operation.urn_response = RaUrn.RdResults
-        operation.request_method = RequestMethod.POST
 
         operation.success = True
 

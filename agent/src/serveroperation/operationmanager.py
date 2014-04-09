@@ -9,9 +9,8 @@ from net import netmanager
 from threading import Thread
 from data.sqlitemanager import SqliteManager
 from utils import systeminfo, settings, logger, queuesave
-from serveroperation.sofoperation import SofOperation, SelfGeneratedOpId
-from serveroperation.sofoperation import OperationKey, OperationValue, CoreUrn
-from serveroperation.sofoperation import ResultOperation, RequestMethod
+from serveroperation.sofoperation import SofOperation, SelfGeneratedOpId, \
+    OperationKey, OperationValue, ResultOperation, ResponseUris
 
 
 class OperationManager():
@@ -26,22 +25,20 @@ class OperationManager():
         self._operation_queue = queuesave.load_operation_queue()
         self._result_queue = queuesave.load_result_queue()
 
-        operation_queue_thread = Thread(target=self._operation_queue_loop)
-        operation_queue_thread.daemon = True
-        operation_queue_thread.start()
+        self._operation_queue_thread = Thread(target=self._operation_queue_loop)
+        self._operation_queue_thread.daemon = True
+        self._operation_queue_thread.start()
 
-        result_queue_thread = Thread(target=self._result_queue_loop)
-        result_queue_thread.daemon = True
-        result_queue_thread.start()
+        self._result_queue_thread = Thread(target=self._result_queue_loop)
+        self._result_queue_thread.daemon = True
+        self._result_queue_thread.start()
 
         self._send_results = None
 
         self._uptime_file = os.path.join(settings.EtcDirectory, '.last_uptime')
 
     def _load_plugin_handlers(self):
-
         for plugin in self._plugins.values():
-
             plugin.send_results_callback(self.add_to_result_queue)
             plugin.register_operation_callback(self.register_plugin_operation)
 
@@ -53,10 +50,13 @@ class OperationManager():
         if SelfGeneratedOpId in operation.id:
             operation.id = ""
 
+        response_uri = ResponseUris.get_response_uri(operation.type)
+        request_method = ResponseUris.get_request_method(operation.type)
+
         result = self._send_results(
             operation.raw_result,
-            operation.urn_response,
-            operation.request_method
+            response_uri,
+            request_method
         )
 
         operation.id = op_id
@@ -132,7 +132,8 @@ class OperationManager():
                 OperationValue.Startup: self.startup_op,
                 OperationValue.NewAgentId: self.new_agent_id_op,
                 OperationValue.Reboot: self.reboot_op,
-                OperationValue.Shutdown: self.shutdown_op
+                OperationValue.Shutdown: self.shutdown_op,
+                OperationValue.RefreshResponseUris: self.refresh_response_uris,
             }
 
             if operation.type in operation_methods:
@@ -165,8 +166,6 @@ class OperationManager():
     def new_agent_op(self, operation):
         operation = self._initial_data(operation)
         operation.raw_result = self._initial_formatter(operation)
-        operation.urn_response = CoreUrn.get_new_agent_urn()
-        operation.request_method = RequestMethod.POST
 
         try:
             modified_json = json.loads(operation.raw_result)
@@ -185,8 +184,6 @@ class OperationManager():
     def startup_op(self, operation):
         operation = self._initial_data(operation)
         operation.raw_result = self._initial_formatter(operation)
-        operation.urn_response = CoreUrn.get_startup_urn()
-        operation.request_method = RequestMethod.PUT
 
         self.add_to_result_queue(operation)
 
@@ -271,6 +268,9 @@ class OperationManager():
         netmanager.allow_checkin = True
         logger.debug("Checkin set to: {0}".format(netmanager.allow_checkin))
 
+    def refresh_response_uris(self, operation):
+        pass
+
     def plugin_op(self, operation):
         self._plugins[operation.plugin].run_operation(operation)
 
@@ -331,8 +331,6 @@ class OperationManager():
 
         operation = SofOperation()
         operation.raw_result = json.dumps(root)
-        operation.urn_response = CoreUrn.get_reboot_urn()
-        operation.request_method = RequestMethod.PUT
 
         self.add_to_result_queue(operation)
 
@@ -366,8 +364,6 @@ class OperationManager():
 
         operation = SofOperation()
         operation.raw_result = json.dumps(root)
-        operation.urn_response = CoreUrn.get_shutdown_urn()
-        operation.request_method = RequestMethod.PUT
 
         self.add_to_result_queue(operation)
 
@@ -510,10 +506,9 @@ class OperationManager():
         operation = result_operation.operation
 
         if result_operation.should_be_sent():
-            # No result means it hasn't been processed, no urn_response
+            # No result means it hasn't been processed, no response_uri
             # means unknown operation was received from server.
-            if (operation.raw_result != settings.EmptyValue and
-                    operation.urn_response and operation.request_method):
+            if (operation.raw_result != settings.EmptyValue):
 
                 # Operation has been processed, send results to server
                 if (not self._save_and_send_results(operation) and
@@ -536,8 +531,7 @@ class OperationManager():
         Arguments:
 
         result_operation
-            An operation which must have a raw_result, urn_response,
-            and request_method attribute.
+            An operation which must have a raw_result attribute.
 
         retry
             Determines if the result queue should continue attempting to send

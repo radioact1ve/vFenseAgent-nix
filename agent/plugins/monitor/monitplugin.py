@@ -4,11 +4,7 @@ import subprocess
 from agentplugin import AgentPlugin
 from utils import RepeatTimer, logger, settings, systeminfo
 
-from serveroperation.sofoperation import RequestMethod
-
-from monitor.monitoperation import MonitOperation, MonitOperationValue
-from monitor.monitoperation import MonitKey, MonitUrn
-
+from monitor.monitoperation import MonitOperation, MonitOperationValue, MonitKey
 from monitor.mac.macmonitor import MacMonitor
 
 
@@ -78,8 +74,6 @@ class MonitorPlugin(AgentPlugin):
             monit_data = self.get_monit_data()
 
             operation.raw_result = json.dumps(monit_data)
-            operation.urn_response = MonitUrn.get_monit_data_urn()
-            operation.request_method = RequestMethod.POST
 
         else:
             logger.warning("Unknown operation %s. Ignoring." % operation.type)

@@ -2,12 +2,10 @@ import os
 import json
 import requests
 
-from serveroperation.sofoperation import OperationKey, OperationValue, CoreUrn
-from serveroperation.sofoperation import RequestMethod
+from utils import settings, logger, RepeatTimer
+from serveroperation.sofoperation import OperationKey, OperationValue, \
+    RequestMethod, ResponseUris
 
-from utils import settings
-from utils import logger
-from utils import RepeatTimer
 
 _message_delimiter = '<EOF>'
 
@@ -57,7 +55,9 @@ class NetManager():
             root[OperationKey.AgentId] = settings.AgentId
 
             success = self.send_message(
-                json.dumps(root), CoreUrn.get_checkin_urn(), RequestMethod.GET
+                json.dumps(root),
+                ResponseUris.get_response_uri(OperationValue.CheckIn),
+                ResponseUris.get_request_method(OperationValue.CheckIn)
             )
 
             if not success:
@@ -84,7 +84,11 @@ class NetManager():
 
             self.http_session = requests.session()
 
-            url = os.path.join(self._server_url, CoreUrn.get_login_urn())
+            url = os.path.join(
+                self._server_url,
+                ResponseUris.get_response_uri(OperationValue.Login)
+            )
+
             headers = {'content-type': 'application/json'}
             payload = {
                 'name': settings.Username,
@@ -121,13 +125,13 @@ class NetManager():
         if req_method == RequestMethod.GET:
             return self.http_session.get
 
-    def send_message(self, data, urn, req_method):
+    def send_message(self, data, uri, req_method):
         """Sends a message to the server and waits for data in return.
 
         Args:
             - data: JSON formatted str to send the server.
 
-            - urn: RESTful urn to send the data.
+            - uri: RESTful uri to send the data.
 
             - req_method: HTTP Request Method
 
@@ -139,7 +143,7 @@ class NetManager():
 
         logger.debug('Sending message to server')
 
-        url = os.path.join(self._server_url, urn)
+        url = os.path.join(self._server_url, uri)
         headers = {'content-type': 'application/json'}
         payload = data
         sent = False
