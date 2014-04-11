@@ -66,7 +66,7 @@ class ResponseUris():
     ResponseDict = {
         OperationValue.NewAgent: {
             OperationKey.ResponseUri: 'rvl/v1/core/newagent',
-            OperationKey.RequestMethod: RequestMethod.PUT
+            OperationKey.RequestMethod: RequestMethod.POST
         },
         OperationValue.Startup: {
             OperationKey.ResponseUri:
@@ -74,11 +74,11 @@ class ResponseUris():
             OperationKey.RequestMethod: RequestMethod.PUT
         },
         OperationValue.Login: {
-            OperationKey.ResponseUri: 'rvl/v1/login',
+            OperationKey.ResponseUri: 'rvl/login',
             OperationKey.RequestMethod: RequestMethod.POST
         },
         OperationValue.Logout: {
-            OperationKey.ResponseUri: 'rvl/v1/logout',
+            OperationKey.ResponseUri: 'rvl/logout',
             OperationKey.RequestMethod: RequestMethod.GET
         }
     }
@@ -134,6 +134,7 @@ class SofOperation(object):
         )
 
         self.type = self.json_message[OperationKey.Operation]
+        self.data = self.json_message.get(OperationKey.Data, {})
 
         self.raw_operation = message
 

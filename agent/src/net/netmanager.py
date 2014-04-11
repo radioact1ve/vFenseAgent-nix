@@ -79,15 +79,14 @@ class NetManager():
     def login(self):
 
         try:
-
-            logger.debug('Logging into server')
-
-            self.http_session = requests.session()
-
             url = os.path.join(
                 self._server_url,
                 ResponseUris.get_response_uri(OperationValue.Login)
             )
+
+            logger.debug("Logging into: {0}".format(url))
+
+            self.http_session = requests.session()
 
             headers = {'content-type': 'application/json'}
             payload = {
@@ -148,7 +147,7 @@ class NetManager():
         payload = data
         sent = False
 
-        logger.debug(url)
+        logger.debug("Sending message to: {0}".format(url))
 
         try:
 

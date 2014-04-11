@@ -146,10 +146,11 @@ class RvSofOperation(SofOperation):
 
         self.applications = []
 
-        self.cpu_priority = self._get_cpu_priority()
-        self.net_throttle = self.json_message.get(
-            RvOperationKey.NetThrottle, 0
-        )
+        if self.json_message:
+            self.cpu_priority = self._get_cpu_priority()
+            self.net_throttle = self.json_message.get(
+                RvOperationKey.NetThrottle, 0
+            )
 
         if self.type in RvOperationValue.InstallOperations:
             self.install_data_list = self._load_install_data()

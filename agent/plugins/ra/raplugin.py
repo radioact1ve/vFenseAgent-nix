@@ -4,8 +4,7 @@ from agentplugin import AgentPlugin
 from net import tunnels
 from utils import logger, settings
 
-from ra import formatter
-from ra import vine
+from ra import formatter, vine
 from ra.raoperation import RaOperation, RaValue
 
 

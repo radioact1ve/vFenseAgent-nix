@@ -4,7 +4,6 @@ import subprocess
 import datetime
 import json
 
-
 from net import netmanager
 from threading import Thread
 from data.sqlitemanager import SqliteManager
@@ -52,6 +51,15 @@ class OperationManager():
 
         response_uri = ResponseUris.get_response_uri(operation.type)
         request_method = ResponseUris.get_request_method(operation.type)
+
+        if not response_uri or not request_method:
+            logger.debug(
+                ("Could not find response uri or request method for '{0}'; "
+                 "response_uri = {1}, request_method = {2}")
+                .format(operation.type, response_uri, request_method)
+            )
+
+            return False
 
         result = self._send_results(
             operation.raw_result,
@@ -269,7 +277,9 @@ class OperationManager():
         logger.debug("Checkin set to: {0}".format(netmanager.allow_checkin))
 
     def refresh_response_uris(self, operation):
-        pass
+        if operation.data:
+            ResponseUris.ResponseDict = operation.data
+            logger.debug("Refreshed response uris.")
 
     def plugin_op(self, operation):
         self._plugins[operation.plugin].run_operation(operation)
@@ -552,7 +562,7 @@ class OperationManager():
     def server_response_processor(self, message):
 
         if message:
-            for op in message.get('data', []):
+            for op in message.get(OperationKey.Data, []):
 
                 # Loading operation for server in order for the queue
                 # dump to know if an operation is savable to file.
