@@ -25,7 +25,9 @@ class RvOperationValue():
     ApplicationsInstalled = 'applications_installed'
     RefreshApps = 'updatesapplications'
 
-    #AgentLogRetrieval = 'agent_log_retrieval'
+    # TODO: implement
+    AgentLogRetrieval = 'agent_log_retrieval'
+    ExecuteCommand = 'execute_command'
 
     ThirdPartyInstall = 'third_party_install'
 

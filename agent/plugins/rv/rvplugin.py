@@ -555,7 +555,7 @@ class RvPlugin(AgentPlugin):
                     logger.debug(
                         "File uris: {0}".format(uri[RvOperationKey.FileUris])
                     )
-                    
+
                     dl_success = self._download_file(
                         uri, app_dir, operation.net_throttle
                     )
