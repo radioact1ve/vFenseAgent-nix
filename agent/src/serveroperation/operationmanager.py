@@ -41,37 +41,37 @@ class OperationManager():
             plugin.send_results_callback(self.add_to_result_queue)
             plugin.register_operation_callback(self.register_plugin_operation)
 
-    def _save_and_send_results(self, operation):
+    def _save_and_send_results(self, operation_type, operation_result):
 
         # Check for self assigned operation IDs and send emtpy string
         # to server if present.
-        op_id = operation.id
-        if SelfGeneratedOpId in operation.id:
-            operation.id = ""
+        #op_id = operation.id
+        #if SelfGeneratedOpId in operation.id:
+        #    operation.id = ""
 
-        response_uri = ResponseUris.get_response_uri(operation.type)
-        request_method = ResponseUris.get_request_method(operation.type)
+        response_uri = ResponseUris.get_response_uri(operation_type)
+        request_method = ResponseUris.get_request_method(operation_type)
 
         if not response_uri or not request_method:
             logger.debug(
                 ("Could not find response uri or request method for '{0}'; "
                  "response_uri = {1}, request_method = {2}")
-                .format(operation.type, response_uri, request_method)
+                .format(operation_type, response_uri, request_method)
             )
 
             return False
 
         result = self._send_results(
-            operation.raw_result,
+            operation_result,
             response_uri,
             request_method
         )
 
-        operation.id = op_id
+        #operation.id = op_id
 
         # Result was actually sent, write to db
-        if result:
-            self._sqlite.add_result(operation, result, datetime.datetime.now())
+        #if result:
+        #    self._sqlite.add_result(operation, result, datetime.datetime.now())
 
         return result
 
@@ -333,14 +333,16 @@ class OperationManager():
         settings.save_settings()
 
     def _reboot_result(self, success, operation_id, message=''):
-        root = {}
-        root[OperationKey.Operation] = OperationValue.Reboot
-        root[OperationKey.OperationId] = operation_id
-        root[OperationKey.Success] = success
-        root[OperationKey.Message] = message
+        result_dict = {
+            OperationKey.Operation: OperationValue.Reboot,
+            OperationKey.OperationId: operation_id,
+            OperationKey.Success: success,
+            OperationKey.Message: message
+        }
 
         operation = SofOperation()
-        operation.raw_result = json.dumps(root)
+        operation.type = OperationValue.Reboot
+        operation.raw_result = json.dumps(result_dict)
 
         self.add_to_result_queue(operation)
 
@@ -366,14 +368,16 @@ class OperationManager():
             self._reboot_result('true', operation_id)
 
     def _shutdown_result(self, success, operation_id, message=''):
-        root = {}
-        root[OperationKey.Operation] = OperationValue.Shutdown
-        root[OperationKey.OperationId] = operation_id
-        root[OperationKey.Success] = success
-        root[OperationKey.Message] = message
+        result_dict = {
+            OperationKey.Operation: OperationValue.Shutdown,
+            OperationKey.OperationId: operation_id,
+            OperationKey.Success: success,
+            OperationKey.Message: message
+        }
 
         operation = SofOperation()
-        operation.raw_result = json.dumps(root)
+        operation.type = OperationValue.Shutdown
+        operation.raw_result = json.dumps(result_dict)
 
         self.add_to_result_queue(operation)
 
@@ -510,29 +514,31 @@ class OperationManager():
                 #)
                 time.sleep(4)
 
-    def process_result_operation(self, result_operation):
+    def process_result_operation(self, result_op):
         """ Attempts to send the results in the result queue. """
 
-        operation = result_operation.operation
+        #operation = result_op.operation
 
-        if result_operation.should_be_sent():
-            # No result means it hasn't been processed, no response_uri
-            # means unknown operation was received from server.
-            if (operation.raw_result != settings.EmptyValue):
+        if result_op.should_be_sent():
+            # No raw_result means it hasn't been processed
+            if (result_op.operation_result != settings.EmptyValue):
 
                 # Operation has been processed, send results to server
-                if (not self._save_and_send_results(operation) and
-                        result_operation.retry):
+                send_result = self._save_and_send_results(
+                    result_op.operation_type, result_op.operation_result
+                )
+
+                if (not send_result and result_op.retry):
                     # Time this out for a few
-                    result_operation.timeout()
+                    result_op.timeout()
 
                     # Failed to send result, place back in queue
-                    self.add_to_result_queue(result_operation)
+                    self.add_to_result_queue(result_op)
             else:
                 logger.debug(("Operation has not been processed, or"
                               " unknown operation was received."))
         else:
-            self.add_to_result_queue(result_operation)
+            self.add_to_result_queue(result_op)
 
     def add_to_result_queue(self, result_operation, retry=True):
         """
@@ -541,7 +547,8 @@ class OperationManager():
         Arguments:
 
         result_operation
-            An operation which must have a raw_result attribute.
+            An operation which must have an operation type and raw_result
+            attribute.
 
         retry
             Determines if the result queue should continue attempting to send

@@ -197,8 +197,11 @@ class ResultOperation():
 
         self.id = self.self_assigned_id()
         self.type = OperationValue.Result
-        self.operation = operation
         self.retry = retry
+
+        #self.operation = operation
+        self.operation_type = operation.type
+        self.operation_result = operation.raw_result
 
         # Sets current time, no timeout
         self.wait_until = self._time_in_seconds()
@@ -226,7 +229,8 @@ class ResultOperation():
     def is_savable(self):
         non_savable = [OperationValue.Startup, OperationValue.NewAgent]
 
-        if self.operation.type in non_savable:
+        #if self.operation.type in non_savable:
+        if self.operation_type in non_savable:
             return False
 
         return True
