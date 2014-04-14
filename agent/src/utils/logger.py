@@ -19,12 +19,14 @@ RollingDateParseRegex = r'.+\.(\d{4}-\d{2}-\d{2})'
 _logger = None
 _initialized = False
 
+
 class LogLevel():
     Debug = 'debug'
     Info = 'info'
     Warning = 'warning'
     Error = 'error'
     Critical = 'critical'
+
 
 def log(message, log_level=LogLevel.Info):
 
@@ -98,6 +100,7 @@ def _get_log_level(level):
     elif level == 'critical':
         return logging.CRITICAL
 
+
 def _get_datetime(log_line):
     """ Parses the date and time from a line in the log file. """
 
@@ -105,9 +108,12 @@ def _get_datetime(log_line):
 
     match = re.search(LogLineRegex, log_line)
     if match:
-        log_datetime = datetime.datetime.strptime(match.group(1), LogDateFormat)
+        log_datetime = datetime.datetime.strptime(
+            match.group(1), LogDateFormat
+        )
 
     return log_datetime
+
 
 def get_logs_between_dates(file_path, start_datetime, end_datetime):
     log_content = []
@@ -125,9 +131,9 @@ def get_logs_between_dates(file_path, start_datetime, end_datetime):
                 # Means it's a new line of log
                 if log_datetime:
 
-                    pasring = True
+                    parsing = True
 
-                    if (start_datetime <= log_datetime and 
+                    if (start_datetime <= log_datetime and
                         log_datetime <= end_datetime):
 
                         log_content.append(log_line)
@@ -148,6 +154,7 @@ def get_logs_between_dates(file_path, start_datetime, end_datetime):
 
     return ''.join(log_content)
 
+
 def get_last_log_datetime(log_path):
     last_log_datetime = None
 
@@ -166,8 +173,9 @@ def get_last_log_datetime(log_path):
 
     return last_log_datetime
 
+
 def retrieve_log_paths(log_date, log_dir):
-    """ 
+    """
     Retrieves the path of a log which corresponds to the given log_date.
 
     @param log_date: Must be of format 'yyyy-mm-dd'
@@ -187,19 +195,21 @@ def retrieve_log_paths(log_date, log_dir):
 
     return log_path
 
+
 def add_log_handler(filename, roll_interval='midnight', backupCount=7):
-    """ 
+    """
     Adds handler to _logger with the formatting specified in LoggingFormatter.
     """
 
     global _logger
 
-    handler = logging.handlers.TimedRotatingFileHandler(filename,
-                                                        when=roll_interval,
-                                                        backupCount=backupCount)
+    handler = logging.handlers.TimedRotatingFileHandler(
+        filename, when=roll_interval, backupCount=backupCount
+    )
     handler.setFormatter(LoggingFormatter)
 
     _logger.addHandler(handler)
+
 
 def remove_log_handler(handler):
     """ Removes handler from _logger. """
@@ -209,11 +219,13 @@ def remove_log_handler(handler):
     handler.close()
     _logger.removeHandler(handler)
 
+
 def remove_all_handlers():
     """ Removes all handlers from logger. """
 
     for handler in _logger.handlers:
         remove_log_handler(handler)
+
 
 def initialize(log_filename, log_dir, log_level=LogLevel.Debug):
     """ Initialize logging for the agent.
@@ -236,4 +248,3 @@ def initialize(log_filename, log_dir, log_level=LogLevel.Debug):
     add_log_handler(LogFilePath)
 
     _initialized = True
-

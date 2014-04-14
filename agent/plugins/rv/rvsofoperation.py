@@ -2,11 +2,9 @@ import json
 
 from collections import namedtuple
 
-from serveroperation.sofoperation import SofOperation
-from serveroperation.sofoperation import OperationError
-
 from utils import logger
-from utils import settings
+from serveroperation.sofoperation import SofOperation, OperationKey, \
+    OperationError
 
 
 class RvOperationValue():
@@ -43,12 +41,15 @@ class RvOperationKey():
     Name = 'app_name'
     Hash = 'hash'
     AppId = 'app_id'
+    AppsToDelete = 'apps_to_delete'
+    AppsToAdd = 'apps_to_add'
     Restart = 'restart'
     PackageType = 'pkg_type'
     CliOptions = 'cli_options'
     CpuThrottle = 'cpu_throttle'
     NetThrottle = 'net_throttle'
     ThirdParty = 'supported_third_party'
+    RebootRequired = 'reboot_required'
 
     FileData = 'file_data'
     FileHash = 'file_hash'
@@ -151,7 +152,7 @@ class RvSofOperation(SofOperation):
         if self.json_message:
             self.cpu_priority = self._get_cpu_priority()
             self.net_throttle = self.json_message.get(
-                RvOperationKey.NetThrottle, 0
+                RvOperationKey.NetThrottle, None
             )
 
         if self.type in RvOperationValue.InstallOperations:
@@ -262,7 +263,7 @@ class RvSofOperation(SofOperation):
 # Simple nametuple to contain install results.
 InstallResult = namedtuple(
     'InstallResult',
-    ['successful', 'error', 'restart',
+    ['success', 'error', 'restart',
      'app_json', 'apps_to_delete', 'apps_to_add']
 )
 
@@ -291,15 +292,15 @@ class RvSofResult():
 
     def to_json(self):
         json_dict = {
-            "operation_id": self.id,
-            "operation": self.type,
-            "success": self.success,
-            "reboot_required": self.reboot_required,
-            "error": self.error,
-            "app_id": self.app_id,
-            "apps_to_delete": self.apps_to_delete,
-            "apps_to_add": self.apps_to_add,
-            "data": self.data
+            OperationKey.OperationId: self.id,
+            OperationKey.Operation: self.type,
+            OperationKey.Success: self.success,
+            RvOperationKey.RebootRequired: self.reboot_required,
+            OperationKey.Error: self.error,
+            RvOperationKey.AppId: self.app_id,
+            RvOperationKey.AppsToDelete: self.apps_to_delete,
+            RvOperationKey.AppsToAdd: self.apps_to_add,
+            OperationKey.Data: self.data
         }
 
         return json.dumps(json_dict)

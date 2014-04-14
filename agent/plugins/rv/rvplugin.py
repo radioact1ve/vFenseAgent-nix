@@ -185,7 +185,7 @@ class RvPlugin(AgentPlugin):
                 install_data.id,  # app id
                 install_result.apps_to_delete,  # apps_to_delete
                 install_result.apps_to_add,  # apps_to_add
-                install_result.successful,  # success
+                install_result.success,  # success
                 install_result.restart,  # restart
                 install_result.error,  # error
                 install_result.app_json  # app json
@@ -227,7 +227,7 @@ class RvPlugin(AgentPlugin):
                 install_data.id,  # app id
                 install_result.apps_to_delete,  # apps_to_delete
                 install_result.apps_to_add,  # apps_to_add
-                install_result.successful,  # success
+                install_result.success,  # success
                 install_result.restart,  # restart
                 install_result.error,  # error
                 install_result.app_json  # app json

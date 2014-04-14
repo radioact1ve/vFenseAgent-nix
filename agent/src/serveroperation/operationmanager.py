@@ -8,8 +8,9 @@ from net import netmanager
 from threading import Thread
 from data.sqlitemanager import SqliteManager
 from utils import systeminfo, settings, logger, queuesave
-from serveroperation.sofoperation import SofOperation, SelfGeneratedOpId, \
-    OperationKey, OperationValue, ResultOperation, ResponseUris
+from serveroperation.sofoperation import SofOperation, SofResult, \
+    SelfGeneratedOpId, OperationKey, OperationValue, ResultOperation, \
+    ResponseUris
 
 
 class OperationManager():
@@ -41,7 +42,7 @@ class OperationManager():
             plugin.send_results_callback(self.add_to_result_queue)
             plugin.register_operation_callback(self.register_plugin_operation)
 
-    def _save_and_send_results(self, operation_type, operation_result):
+    def _save_and_send_results(self, operation_type, operation_raw_result):
 
         # Check for self assigned operation IDs and send emtpy string
         # to server if present.
@@ -62,7 +63,7 @@ class OperationManager():
             return False
 
         result = self._send_results(
-            operation_result,
+            operation_raw_result,
             response_uri,
             request_method
         )
@@ -120,16 +121,35 @@ class OperationManager():
 
         except Exception as e:
             logger.error(
-                    "Failed to convert str to operation: {0}".format(operation)
+                "Failed to convert str to operation: {0}".format(operation)
             )
             logger.exception(e)
             self._major_failure(operation, e)
             return
 
         try:
+            if not operation.agent_queue_ttl_valid():
+                sofresult = SofResult(
+                    operation.id,
+                    operation.type,
+                    'false',
+                    "Operation past its agent queue ttl."
+                )
+
+                self._save_and_send_results(
+                    sofresult.type, sofresult.raw_result
+                )
+
+                logger.error(
+                    "Operation {0} past its agent queue ttl."
+                    .format(operation)
+                )
+
+                return
+
             logger.info(
                 "Process the following operation: {0}"
-                .format(operation.__dict__)
+                .format(json.dumps(operation.__dict__, indent=4))
             )
 
             self._sqlite.add_operation(operation, datetime.datetime.now())
@@ -576,7 +596,26 @@ class OperationManager():
 
                 try:
                     operation = SofOperation(json.dumps(op))
-                    self.add_to_operation_queue(operation)
+
+                    if operation.server_queue_ttl_valid():
+                        self.add_to_operation_queue(operation)
+
+                    else:
+                        sofresult = SofResult(
+                            operation.id,
+                            operation.type,
+                            'false',
+                            "Operation past its server queue ttl."
+                        )
+
+                        self._save_and_send_results(
+                            sofresult.type, sofresult.raw_result
+                        )
+
+                        logger.debug(
+                            "Operation {0} past its server queue ttl"
+                            .format(operation.id)
+                        )
 
                 except Exception as e:
                     logger.debug(

@@ -49,6 +49,9 @@ class OperationKey():
     ResponseUri = 'response_uri'
     RequestMethod = 'request_method'
 
+    ServerQueueTTL = 'server_queue_ttl'
+    AgentQueueTTL = 'agent_queue_ttl'
+
 
 class OperationError():
     pass
@@ -112,32 +115,46 @@ class SofOperation(object):
         self.shutdown_delay_seconds = 90
         self.error = settings.EmptyValue
 
+        self.server_queue_ttl = None
+        self.agent_queue_ttl = None
+
         if message:
             self._load_message(message)
 
         else:
             self.json_message = settings.EmptyValue
 
-            self.id = self.self_assigned_id()
+            self.id = self._self_assigned_id()
             self.plugin = settings.EmptyValue
             self.type = settings.EmptyValue
+            # TODO: Is this needed anymore?
             self.raw_operation = settings.EmptyValue
 
     def _load_message(self, message):
         self.json_message = json.loads(message)
 
         self.id = self.json_message.get(
-            OperationKey.OperationId, self.self_assigned_id()
+            OperationKey.OperationId, self._self_assigned_id()
         )
+        self.type = self.json_message[OperationKey.Operation]
 
         self.plugin = self.json_message.get(
             OperationKey.Plugin, settings.EmptyValue
         )
-
-        self.type = self.json_message[OperationKey.Operation]
         self.data = self.json_message.get(OperationKey.Data, {})
 
+        self.server_queue_ttl = self.json_message.get(
+            OperationKey.ServerQueueTTL, None
+        )
+        self.agent_queue_ttl = self.json_message.get(
+            OperationKey.AgentQueueTTL, None
+        )
+
+        # TODO: Is this needed anymore?
         self.raw_operation = message
+
+    def _self_assigned_id(self):
+        return str(uuid.uuid4()) + SelfGeneratedOpId
 
     def is_savable(self):
         non_savable = [OperationValue.Reboot, OperationValue.Shutdown,
@@ -148,8 +165,24 @@ class SofOperation(object):
 
         return True
 
-    def self_assigned_id(self):
-        return str(uuid.uuid4()) + SelfGeneratedOpId
+    def server_queue_ttl_valid(self):
+        """
+        Used to check if the operation passed its server queue ttl. Serves
+        as a backup in case the server didn't catch it in time.
+        """
+        if self.server_queue_ttl is not None:
+            if time.time() > self.server_queue_ttl:
+                return False
+
+        return True
+
+    def agent_queue_ttl_valid(self):
+        """ Use to verify if the operation is still good to process. """
+        if self.agent_queue_ttl is not None:
+            if time.time() > self.agent_queue_ttl:
+                return False
+
+        return True
 
     def to_json(self):
         """Converts operation to a JSON formatted string.
@@ -195,7 +228,7 @@ class ResultOperation():
         timeout
         """
 
-        self.id = self.self_assigned_id()
+        self.id = self._self_assigned_id()
         self.type = OperationValue.Result
         self.retry = retry
 
@@ -235,17 +268,25 @@ class ResultOperation():
 
         return True
 
-    def self_assigned_id(self):
+    def _self_assigned_id(self):
         return str(uuid.uuid4()) + SelfGeneratedOpId
 
 
 class SofResult():
-    """
-    Data structure to pass around operation results.
-    """
-    def __init__(self, rv_id='', successful=False, restart=False, message=''):
+    def __init__(self, op_id, op_type, success, message):
+        self.id = op_id
+        self.type = op_type
+        self.success = success
+        self.message = message
 
-        self.id = rv_id
-        self.successful = successful
-        self.restart = restart
-        self.specific_message = message
+        self.raw_result = self.to_json()
+
+    def to_json(self):
+        json_dict = {
+            OperationKey.OperationId: self.id,
+            OperationKey.Operation: self.type,
+            OperationKey.Success: self.success,
+            OperationKey.Message: self.message
+        }
+
+        return json.dumps(json_dict)
