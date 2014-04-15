@@ -187,12 +187,16 @@ def main():
         print 'Please follow the version format "x.x.x"'
         sys.exit(1)
 
-    if platform not in SUPPORTED_PLATFORMS:
+    if platform == 'all':
+        for platform in SUPPORTED_PLATFORMS:
+            build(version, platform)
+    elif platform in SUPPORTED_PLATFORMS:
+        build(version, platform)
+    else:
         print '{0} is not supported.'.format(platform)
         print 'Supported platforms are: {0}'.format(SUPPORTED_PLATFORMS.keys())
         sys.exit(1)
 
-    build(version, platform)
 
 if __name__ == '__main__':
     main()
