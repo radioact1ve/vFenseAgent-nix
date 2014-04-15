@@ -11,7 +11,7 @@ def get_hw_info():
     """ This method basically just calls the respected hardware class
     to get the specs.
     """
-    
+
     hw_info = {}
 
     if platform.system() == "Darwin":
@@ -26,6 +26,7 @@ def get_hw_info():
     format_hw_info(hw_info)
 
     return hw_info
+
 
 def format_hw_info(hw_dict):
     # CPU info
@@ -57,6 +58,7 @@ def format_hw_info(hw_dict):
         hdd['free_size_kb'] = int(hdd['free_size_kb'])
         hdd['size_kb'] = int(hdd['size_kb'])
 
+
 def empty_specs():
     """
     Simple way to create empty hardware list.
@@ -84,7 +86,7 @@ class CpuInfo():
         except Exception as e:
             logger.error("Error reading cpu info.")
             logger.exception(e)
-            self._cpus = {} # Something went wrong, set to empty dict.
+            self._cpus = {}  # Something went wrong, set to empty dict.
 
     def _load_data(self):
         self._physical_ids = {}
@@ -234,34 +236,40 @@ class CpuInfo():
 class DisplayInfo():
 
     def __init__(self):
+        #try:
+        #    cmd = ['lspci', '-v']
+        #    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        #    self._raw_output, _ = process.communicate()
+        #    self._parse_output()
+        #except Exception as e:
+        #    logger.error("Error reading display info.")
+        #    logger.exception(e)
+        #    self._display_list = [] # Something went wrong, set to empty list.
+        pass
 
-        try:
-            cmd = ['lspci', '-v']
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            self._raw_output, _ = process.communicate()
-            self._parse_output()
-        except Exception as e:
-            logger.error("Error reading display info.")
-            logger.exception(e)
-            self._display_list = [] # Something went wrong, set to empty list.
+    def _get_pci_device_info(self):
+        cmd = ['lspci', '-v']
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        raw_output, _ = process.communicate()
 
-    def _parse_output(self):
+        return raw_output
+
+    def _parse_output(self, raw_output):
         tmp_list = []
-        for s in self._raw_output.splitlines():
+        for s in raw_output.splitlines():
             tmp_list.append(s.replace("\t", ''))
 
-        self._output = tmp_list
-        self._display_dict = None
-
-        self._display_list = []
+        output = tmp_list
+        display_dict = None
+        display_list = []
 
         reading_vga = False
-        for entry in self._output:
+        for entry in output:
 
             if 'VGA compatible controller: ' in entry:
 
                 name = entry.partition('VGA compatible controller:')[2].strip()
-                self._display_dict = {"name" : name}
+                display_dict = {"name": name}
 
                 reading_vga = True
 
@@ -276,37 +284,52 @@ class DisplayInfo():
                 if match:
                     speed_mhz = match.group().split('MHz')[0]
 
-                self._display_dict["speed_mhz"] = speed_mhz
+                display_dict["speed_mhz"] = speed_mhz
 
                 continue
 
-            elif (entry.find('Memory at ') == 0)\
-                 and ("prefetchable" in entry) and reading_vga:
+            elif (entry.find('Memory at ') == 0) and \
+                 ("prefetchable" in entry) and reading_vga:
 
-                size_string = entry.split("[size=")[1].replace(']','')
+                size_string = entry.split("[size=")[1].replace(']', '')
 
                 size_kb = settings.EmptyValue
+
+                # KB
+                if 'K' in size_string:
+                    size = int(size_string.replace('K', ''))
+                    size_kb = size
+
                 # MB
-                if "M" in size_string:
+                if 'M' in size_string:
                     size = int(size_string.replace('M', ''))
                     size_kb = size * 1024
 
-                    # GB
-                elif "G" in size_string:
+                # GB
+                elif 'G' in size_string:
                     size = int(size_string.replace('G', ''))
                     size_kb = (size * 1024) * 1024
 
-                self._display_dict["ram_kb"] = str(size_kb)
+                display_dict["ram_kb"] = size_kb
 
                 continue
 
             # Empty line means the beginning of a new processor item. Save.
             elif entry == "" and reading_vga:
-                self._display_list.append(self._display_dict.copy())
+                display_list.append(display_dict.copy())
                 reading_vga = False
 
+        return display_list
+
     def get_display_list(self):
-        return self._display_list
+        raw_output = self._get_pci_device_info()
+
+        try:
+            display_list = self._parse_output(raw_output)
+        except Exception:
+            display_list = []
+
+        return display_list
 
 
 class HarddriveInfo():
@@ -431,10 +454,10 @@ class NicInfo():
 
             elif entry.find('link/ether') == 0 and reading_flag:
 
-                mac = entry.replace('link/ether', ''
-                ).partition('brd')[0].strip()
+                mac = entry.replace('link/ether', '') \
+                      .partition('brd')[0].strip()
 
-                mac = mac.replace(':', '') # Server doesn't expect ':'s
+                mac = mac.replace(':', '')  # Server doesn't expect ':'s
                 temp_dict['mac'] = mac
 
             # Space after 'inet' to prevent check with 'inet6'
@@ -446,7 +469,6 @@ class NicInfo():
             elif entry == "" and reading_flag:
                 reading_flag = False
                 self._nics.append(temp_dict.copy())
-
 
     def get_nic_list(self):
 
