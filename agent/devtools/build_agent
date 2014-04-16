@@ -33,10 +33,10 @@ INSTALL_SCRIPT = 'agent_utils'
 COMPILED_PYTHON_PATHS = {
     'mac': 'agent/deps/mac/Python-2.7.5/',
     #'deb': 'agent/deps/deb/Python-2.7.5/',
-    'rpm': 'agent/deps/rpm/Python-2.7.5/',
-    'rpm6': 'agent/deps/rpm6/Python-2.7.5/',
-    'rpm-32': 'agent/deps/rpm-32/Python-2.7.5/',
-    'rpm6-32': 'agent/deps/rpm6-32/Python-2.7.5/'
+    'rpm5_64': 'agent/deps/rpm/Python-2.7.5/',
+    'rpm6_64': 'agent/deps/rpm6/Python-2.7.5/',
+    'rpm5_32': 'agent/deps/rpm-32/Python-2.7.5/',
+    'rpm6_32': 'agent/deps/rpm6-32/Python-2.7.5/'
 }
 
 
