@@ -25,7 +25,7 @@ class TestDisplayInfoLinux(unittest.TestCase):
             Expansion ROM at e2000000 [disabled] [size=64K]
             Kernel driver in use: prl_tg\n\n"""
 
-    def test_display_info_parsing_1(self):
+    def test_display_info_parsing_multiple_memory_entries(self):
         display_info = hardware.DisplayInfo()
         expected = [{
             'speed_mhz': 0,
@@ -37,7 +37,7 @@ class TestDisplayInfoLinux(unittest.TestCase):
 
         self.assertEqual(expected, display_info.get_display_list())
 
-    def test_display_info_parsing_2(self):
+    def test_display_info_parsing_single_memory_entry(self):
         display_info = hardware.DisplayInfo()
         expected = [{
             'speed_mhz': 66,
@@ -49,7 +49,7 @@ class TestDisplayInfoLinux(unittest.TestCase):
 
         self.assertEqual(expected, display_info.get_display_list())
 
-    def test_display_info_parsing_3(self):
+    def test_display_info_parsing_multiple_vgas(self):
         display_info = hardware.DisplayInfo()
         three = self.one + self.two
         expected = [
