@@ -3,9 +3,9 @@ import os
 import threading
 import time
 
-from utils import settings
-from utils import logger
-from utils.distro.mac import plist
+from src.utils import settings
+from src.utils import logger
+from src.utils.distro.mac import plist
 
 class MacHardware():
 
