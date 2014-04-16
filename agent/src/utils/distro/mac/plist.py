@@ -2,7 +2,7 @@ import os
 import plistlib
 import subprocess
 
-from utils import logger
+from src.utils import logger
 
 
 class PlistInterface:

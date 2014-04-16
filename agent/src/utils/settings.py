@@ -7,7 +7,7 @@ import sys
 import os
 import shutil
 
-from utils import logger
+from src.utils import logger
 
 # Use this value to fill in a key that the server requires
 # but the agent wasn't able to find out.

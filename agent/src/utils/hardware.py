@@ -3,8 +3,8 @@ import re
 import platform
 
 from distro.mac.hardware import MacHardware
-from utils import settings
-from utils import logger
+from src.utils import settings
+from src.utils import logger
 
 
 def get_hw_info():
@@ -48,10 +48,6 @@ def format_hw_info(hw_dict):
 
     # Memory info
     hw_dict['memory'] = float(hw_dict['memory'])
-
-    # Display info
-    for display in hw_dict['display']:
-        display['ram_kb'] = int(display['ram_kb'])
 
     # Storage info
     for hdd in hw_dict['storage']:
@@ -235,18 +231,6 @@ class CpuInfo():
 
 class DisplayInfo():
 
-    def __init__(self):
-        #try:
-        #    cmd = ['lspci', '-v']
-        #    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        #    self._raw_output, _ = process.communicate()
-        #    self._parse_output()
-        #except Exception as e:
-        #    logger.error("Error reading display info.")
-        #    logger.exception(e)
-        #    self._display_list = [] # Something went wrong, set to empty list.
-        pass
-
     def _get_pci_device_info(self):
         cmd = ['lspci', '-v']
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
@@ -266,42 +250,41 @@ class DisplayInfo():
         reading_vga = False
         for entry in output:
 
-            if 'VGA compatible controller: ' in entry:
-
+            if 'VGA compatible controller:' in entry:
                 name = entry.partition('VGA compatible controller:')[2].strip()
-                display_dict = {"name": name}
+                display_dict = {'name': name}
 
                 reading_vga = True
 
                 continue
 
-            elif (entry.find('Flags: ') == 0) and reading_vga:
-
-                flags = entry.partition(":")[2].strip()
+            elif 'Flags:' in entry and reading_vga:
+                flags = entry.partition(':')[2].strip()
                 match = re.match(r'[0-9]+MHz', flags)
 
-                speed_mhz = settings.EmptyValue
+                speed_mhz = 0
                 if match:
-                    speed_mhz = match.group().split('MHz')[0]
+                    speed_mhz = int(match.group().split('MHz')[0])
 
-                display_dict["speed_mhz"] = speed_mhz
+                # TODO: string or int?
+                display_dict['speed_mhz'] = speed_mhz
 
                 continue
 
-            elif (entry.find('Memory at ') == 0) and \
-                 ("prefetchable" in entry) and reading_vga:
+            elif 'Memory at' in entry and \
+                 'prefetchable' in entry and \
+                 reading_vga:
 
                 size_string = entry.split("[size=")[1].replace(']', '')
 
-                size_kb = settings.EmptyValue
+                size_kb = 0
 
                 # KB
                 if 'K' in size_string:
-                    size = int(size_string.replace('K', ''))
-                    size_kb = size
+                    size_kb = int(size_string.replace('K', ''))
 
                 # MB
-                if 'M' in size_string:
+                elif 'M' in size_string:
                     size = int(size_string.replace('M', ''))
                     size_kb = size * 1024
 
@@ -310,7 +293,8 @@ class DisplayInfo():
                     size = int(size_string.replace('G', ''))
                     size_kb = (size * 1024) * 1024
 
-                display_dict["ram_kb"] = size_kb
+                display_dict['ram_kb'] = \
+                    display_dict.get('ram_kb', 0) + size_kb
 
                 continue
 
@@ -454,8 +438,10 @@ class NicInfo():
 
             elif entry.find('link/ether') == 0 and reading_flag:
 
-                mac = entry.replace('link/ether', '') \
-                      .partition('brd')[0].strip()
+                mac = (entry
+                       .replace('link/ether', '')
+                       .partition('brd')[0]
+                       .strip())
 
                 mac = mac.replace(':', '')  # Server doesn't expect ':'s
                 temp_dict['mac'] = mac

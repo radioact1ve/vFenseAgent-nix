@@ -1,6 +1,6 @@
 import subprocess
 from datetime import datetime
-from utils import logger
+from src.utils import logger
 
 
 def get_current_uptime():
