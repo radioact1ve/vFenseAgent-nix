@@ -129,16 +129,7 @@ class TestDisplayInfoLinux(unittest.TestCase):
 
     # \n\n is needed at the end so that the parsing can stop.
     # This simulates the real output from lscpi -v
-    one = \
-        """00:02.0 VGA compatible controller: Cirrus Logic GD 5446 (prog-if 00 [VGA controller])
-            Subsystem: Red Hat, Inc Device 1100
-            Flags: fast devsel
-            Memory at fc000000 (32-bit, prefetchable) [size=32M]
-            Memory at febf1000 (32-bit, non-prefetchable) [size=4K]
-            Expansion ROM at febe0000 [disabled] [size=64K]
-            Kernel modules: cirrusfb\n\n"""
-
-    two = \
+    single_memory_entry = \
         """01:00.0 VGA compatible controller: Parallels, Inc. Accelerated Virtual Video Adapter (prog-if 00 [VGA controller])
             Subsystem: Parallels, Inc. Device 0400
             Flags: 66MHz, medium devsel, IRQ 21
@@ -147,17 +138,14 @@ class TestDisplayInfoLinux(unittest.TestCase):
             Expansion ROM at e2000000 [disabled] [size=64K]
             Kernel driver in use: prl_tg\n\n"""
 
-    def test_display_info_parsing_multiple_memory_entries(self):
-        display_info = hardware.DisplayInfo()
-        expected = [{
-            'speed_mhz': 0,
-            'name': 'Cirrus Logic GD 5446 (prog-if 00 [VGA controller])',
-            'ram_kb': 32772
-        }]
-
-        display_info._get_pci_device_info = lambda: self.one
-
-        self.assertEqual(expected, display_info.get_display_list())
+    multiple_memory_entries = \
+        """00:02.0 VGA compatible controller: Cirrus Logic GD 5446 (prog-if 00 [VGA controller])
+            Subsystem: Red Hat, Inc Device 1100
+            Flags: fast devsel
+            Memory at fc000000 (32-bit, prefetchable) [size=32M]
+            Memory at febf1000 (32-bit, non-prefetchable) [size=4K]
+            Expansion ROM at febe0000 [disabled] [size=64K]
+            Kernel modules: cirrusfb\n\n"""
 
     def test_display_info_parsing_single_memory_entry(self):
         display_info = hardware.DisplayInfo()
@@ -167,13 +155,25 @@ class TestDisplayInfoLinux(unittest.TestCase):
             'ram_kb': 32768
         }]
 
-        display_info._get_pci_device_info = lambda: self.two
+        display_info._get_pci_device_info = lambda: self.single_memory_entry
+
+        self.assertEqual(expected, display_info.get_display_list())
+
+    def test_display_info_parsing_multiple_memory_entries(self):
+        display_info = hardware.DisplayInfo()
+        expected = [{
+            'speed_mhz': 0,
+            'name': 'Cirrus Logic GD 5446 (prog-if 00 [VGA controller])',
+            'ram_kb': 32772
+        }]
+
+        display_info._get_pci_device_info = lambda: self.multiple_memory_entries
 
         self.assertEqual(expected, display_info.get_display_list())
 
     def test_display_info_parsing_multiple_vgas(self):
         display_info = hardware.DisplayInfo()
-        three = self.one + self.two
+        multiple_vga_entries = self.multiple_memory_entries + self.single_memory_entry
         expected = [
             {
                 'speed_mhz': 0,
@@ -187,10 +187,34 @@ class TestDisplayInfoLinux(unittest.TestCase):
             }
         ]
 
-        display_info._get_pci_device_info = lambda: three
+        display_info._get_pci_device_info = lambda: multiple_vga_entries
 
         self.assertEqual(expected, display_info.get_display_list())
 
 
 class TestDisplayInfoMac(unittest.TestCase):
+    pass
+
+
+class TestHarddriveInfoLinux(unittest.TestCase):
+    pass
+
+
+class TestHarddriveInfoMac(unittest.TestCase):
+    pass
+
+
+class TestNicInfoLinux(unittest.TestCase):
+    pass
+
+
+class TestNicInfoMac(unittest.TestCase):
+    pass
+
+
+class TestMemoryInfoLinux(unittest.TestCase):
+    pass
+
+
+class TestMemoryInfoMac(unittest.TestCase):
     pass
