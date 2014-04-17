@@ -203,20 +203,17 @@ class CpuInfo():
         # just some clean up.
         self._cpu_dict = None
 
-    def _create_physical_dict(self, _id,
-                              name='',
-                              cores='',
-                              speed_mhz='',
-                              cache_kb='',
-                              bit_type=''):
+    def _create_physical_dict(self, _id, name='', cores='', speed_mhz='',
+                              cache_kb='', bit_type=''):
 
-        logical_dict = {}
-        logical_dict["cpu_id"] = _id
-        logical_dict["name"] = name
-        logical_dict["cores"] = cores
-        logical_dict["speed_mhz"] = speed_mhz
-        logical_dict["cache_kb"] = cache_kb
-        logical_dict["bit_type"] = bit_type
+        logical_dict = {
+            "cpu_id": _id,
+            "name": name,
+            "cores": cores,
+            "speed_mhz": speed_mhz,
+            "cache_kb": cache_kb,
+            "bit_type": bit_type
+        }
 
         return logical_dict
 
@@ -230,8 +227,14 @@ class CpuInfo():
 
 
 class DisplayInfo():
+    """Retrieve information about a computers display."""
 
     def _get_pci_device_info(self):
+        """Retrieves all PCI device info from the lscpi command.
+
+        Returns:
+           str: Raw output from the 'lspci -v' command through subprocess.
+        """
         cmd = ['lspci', '-v']
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         raw_output, _ = process.communicate()
@@ -239,6 +242,25 @@ class DisplayInfo():
         return raw_output
 
     def _parse_output(self, raw_output):
+        """Parses output for 'VGA compatible controller' entry.
+
+        Args:
+            raw_output (str): Output in the format of what you get from
+                'lspci -v'.
+
+        Returns:
+            Dictionary with 3 keys:
+                name (str)
+                speed_mhz (int)
+                ram_kb (int)
+
+            Example:
+                {
+                    'name': 'Parallels, Inc. Accelerated Virtual Video Adapter (prog-if 00 [VGA controller])',
+                    'speed_mhz': 66,
+                    'ram_kb': 32768
+                }
+        """
         tmp_list = []
         for s in raw_output.splitlines():
             tmp_list.append(s.replace("\t", ''))
@@ -306,6 +328,21 @@ class DisplayInfo():
         return display_list
 
     def get_display_list(self):
+        """Retrieves data corresponding to the computers display.
+
+        Returns:
+            Dictionary with 3 keys:
+                name (str)
+                speed_mhz (int)
+                ram_kb (int)
+
+            Example:
+                {
+                    'name': 'Parallels, Inc. Accelerated Virtual Video Adapter (prog-if 00 [VGA controller])',
+                    'speed_mhz': 66,
+                    'ram_kb': 32768
+                }
+            """
         raw_output = self._get_pci_device_info()
 
         try:
