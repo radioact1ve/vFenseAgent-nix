@@ -55,173 +55,106 @@ def format_hw_info(hw_dict):
         hdd['size_kb'] = int(hdd['size_kb'])
 
 
-def empty_specs():
-    """
-    Simple way to create empty hardware list.
-    @return: empty HW list
-    """
-    return {
-        'cpu': [],
-        'memory': "",
-        'display': [],
-        'storage': [],
-        'nic': [],
-        }
-
-
 class CpuInfo():
 
-    def __init__(self):
+    def _get_cat_cpu_info(self):
+        """Retrieve cpu info from the command 'cat /proc/cpuinfo'.
 
-        try:
-            cmd = ['cat', '/proc/cpuinfo']
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            self._raw_output, _stderr = process.communicate()
-            self._parse_output()
-            self._load_data()
-        except Exception as e:
-            logger.error("Error reading cpu info.")
-            logger.exception(e)
-            self._cpus = {}  # Something went wrong, set to empty dict.
+        Returns:
+            str: Raw output from subprocess call to 'cat /proc/cpuinfo'
+        """
+        cmd = ['cat', '/proc/cpuinfo']
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        raw_output, _ = process.communicate()
 
-    def _load_data(self):
-        self._physical_ids = {}
-        self._cpus = {}
+        return raw_output
 
-        for logical_cpu in self._logical_cpu_list:
-            _id = logical_cpu["physical_id"]
-            name = logical_cpu["name"]
-            self._physical_ids[_id] = name
+    def _parse_cpu_data(self, raw_output):
+        """Parse cpu information from the 'cat /proc/cpuinfo' subprocess call.
 
-        self._number_of_cpus = len(self._physical_ids)
+        Args:
+            raw_output (str): String which follows a format identical to the
+                              'cat /proc/info' output.
 
-        for i in range(self._number_of_cpus):
-            for logical_cpu in self._logical_cpu_list:
-                p_id = logical_cpu["physical_id"]
+        Returns:
+            list: List of dictionaries which hold data for each cpu found.
+                  Each dict has the following keys:
+                    cpu_id (int)
+                    name (str)
+                    cores (int)
+                    speed_mhz (float)
+                    cache_kb (int)
+                    bit_type (int)
 
-                if p_id in self._cpus:
-                    continue
-
-                logical_dict = self._create_physical_dict(
-                    str(i),
-                    logical_cpu["name"],
-                    logical_cpu["cores"],
-                    logical_cpu["speed_mhz"],
-                    logical_cpu["cache_kb"],
-                    logical_cpu["bit_type"]
-                )
-
-                self._cpus[p_id] = logical_dict.copy()
-
-    def _parse_output(self):
-        self._cat_output = []
-        for s in self._raw_output.splitlines():
-            self._cat_output.append(s.replace("\t", ''))
-
-        self._logical_cpu_list = []
-
-        # Setting the physical id to zero in the event that there is
-        # only one physical CPU. /proc/cpuinfo doesn't display 'physical id'
-        # and 'core id' if there is only one.
-        self._cpu_dict = {}
-        self._cpu_dict["physical_id"] = '0'
-        self._cpu_dict["cores"] = '0'
-
-        for entry in self._cat_output:
-
-            if entry.find('processor: ') == 0:
-
-                logical_id = entry.partition(":")[2].strip()
-                self._cpu_dict["processor"] = logical_id
-
-                continue
-
-            elif entry.find('physical id:') == 0:
-
-                physical_id = entry.partition(":")[2].strip()
-                self._cpu_dict["physical_id"] = physical_id
-
-                continue
-
-            elif entry.find('core id:') == 0:
-
-                core_id = entry.partition(":")[2].strip()
-                self._cpu_dict["core_id"] = core_id
-
-                continue
-
-            elif entry.find('cpu cores:') == 0:
-
-                cores = entry.partition(":")[2].strip()
-                self._cpu_dict["cores"] = cores
-
-                continue
-
-            elif entry.find('model name:') == 0:
-
-                model_name = entry.partition(":")[2].strip()
-                self._cpu_dict["name"] = model_name
-
-                continue
-
-            elif entry.find('cpu MHz:') == 0:
-
-                speed = entry.partition(":")[2].strip()
-                self._cpu_dict["speed_mhz"] = speed
-
-                continue
-
-            elif entry.find('cache size:') == 0:
-
-                size = entry.partition(":")[2].strip()
-
-                size_kb = settings.EmptyValue
-                if "KB".lower() in size.lower():
-                    # Some logic here!!
-                    size_kb = size.lower().replace("KB".lower(), "").strip()
-
-                self._cpu_dict["cache_kb"] = size_kb
-
-                continue
-
-            # 'flags' show a lot of options on one line separated by a space.
-            elif entry.find('flags:') == 0:
-
-                # lm is the flag set by linux to indicate 64bit
-                # X86_FEATURE_LM (long mode)
-                if " lm " in entry:
-                    self._cpu_dict["bit_type"] = '64'
-                else:
-                    self._cpu_dict["bit_type"] = '32'
-
-                continue
-
-            # Empty line means the beginning of a new processor item. Save.
-            elif entry == "":
-                self._logical_cpu_list.append(self._cpu_dict.copy())
-
-        # just some clean up.
-        self._cpu_dict = None
-
-    def _create_physical_dict(self, _id, name='', cores='', speed_mhz='',
-                              cache_kb='', bit_type=''):
-
-        logical_dict = {
-            "cpu_id": _id,
-            "name": name,
-            "cores": cores,
-            "speed_mhz": speed_mhz,
-            "cache_kb": cache_kb,
-            "bit_type": bit_type
-        }
-
-        return logical_dict
-
-    def get_cpu_list(self):
+            Example:
+            [
+                {
+                    'cpu_id': 0,
+                    'name': "Intel(R) Core(TM) i5-3230M CPU @ 2.60GHz",
+                    'cores': 1,
+                    'speed_mhz': 2594.000,
+                    'cache_kb': 3072,
+                    'bit_type': 64
+                },
+                ...
+            ]
+        """
         cpu_list = []
 
-        for cpu in self._cpus:
-            cpu_list.append(self._cpus[cpu])
+        cpu_info_blocks = raw_output.split('\n\n')
+
+        for info_block in cpu_info_blocks:
+            # Setting defaults for variables that are known
+            # to not show in the raw_output
+            cpu_data = {
+                'cores': 1,
+            }
+
+            for line in info_block.split('\n'):
+                line = line.strip()
+
+                if re.match("processor", line):
+                    cpu_id = line.split(':')[1].strip()
+                    cpu_data['cpu_id'] = int(cpu_id)
+
+                elif re.match("model name", line):
+                    name = line.split(':')[1].strip()
+                    cpu_data['name'] = name
+
+                elif re.match("cpu cores", line):
+                    cores = line.split(':')[1].strip()
+                    cpu_data['cores'] = int(cores)
+
+                elif re.match("cpu MHz", line):
+                    speed_mhz = line.split(':')[1].strip()
+                    cpu_data['speed_mhz'] = float(speed_mhz)
+
+                elif re.match("cache size", line):
+                    cache_kb = line.split(':')[1].strip()
+                    cpu_data['cache_kb'] = int(cache_kb.replace('KB', ''))
+
+                elif re.match("flags", line):
+                    bit_type = 32
+
+                    # lm is the flag set by linux to indicate 64bit
+                    # X86_FEATURE_LM (long mode)
+                    if " lm " in line:
+                        bit_type = 64
+
+                    cpu_data['bit_type'] = bit_type
+
+            cpu_list.append(cpu_data)
+
+        return cpu_list
+
+    def get_cpu_list(self):
+        try:
+            raw_output = self._get_cat_cpu_info()
+            cpu_list = self._parse_cpu_data(raw_output)
+        except Exception as e:
+            logger.error("Error getting cpu info.")
+            logger.exception(e)
+            cpu_list = []
 
         return cpu_list
 
@@ -241,12 +174,12 @@ class DisplayInfo():
 
         return raw_output
 
-    def _parse_output(self, raw_output):
+    def _parse_vga_information(self, raw_output):
         """Parses output for 'VGA compatible controller' entry.
 
         Args:
             raw_output (str): Output in the format of what you get from
-                'lspci -v'.
+                              'lspci -v'.
 
         Returns:
             Dictionary with 3 keys:
@@ -346,7 +279,7 @@ class DisplayInfo():
         raw_output = self._get_pci_device_info()
 
         try:
-            display_list = self._parse_output(raw_output)
+            display_list = self._parse_vga_information(raw_output)
         except Exception:
             display_list = []
 
