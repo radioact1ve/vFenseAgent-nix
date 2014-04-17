@@ -28,6 +28,7 @@ def get_hw_info():
     return hw_info
 
 
+# TODO: completely remove
 def format_hw_info(hw_dict):
     # CPU info
     for cpu in hw_dict['cpu']:
@@ -56,6 +57,7 @@ def format_hw_info(hw_dict):
 
 
 class CpuInfo():
+    """Retrieve information about the computers cpu(s)."""
 
     def _get_cat_cpu_info(self):
         """Retrieve cpu info from the command 'cat /proc/cpuinfo'.
@@ -148,6 +150,33 @@ class CpuInfo():
         return cpu_list
 
     def get_cpu_list(self):
+        """Get cpu info for every cpu found from the 'cat /proc/cpuinfo'
+            subprocess call.
+
+        Returns:
+            list: List of dictionaries which hold data for each cpu found.
+                  Each dict has the following keys:
+                    cpu_id (int)
+                    name (str)
+                    cores (int)
+                    speed_mhz (float)
+                    cache_kb (int)
+                    bit_type (int)
+
+            Example:
+            [
+                {
+                    'cpu_id': 0,
+                    'name': "Intel(R) Core(TM) i5-3230M CPU @ 2.60GHz",
+                    'cores': 1,
+                    'speed_mhz': 2594.000,
+                    'cache_kb': 3072,
+                    'bit_type': 64
+                },
+                ...
+            ]
+        """
+
         try:
             raw_output = self._get_cat_cpu_info()
             cpu_list = self._parse_cpu_data(raw_output)
@@ -160,7 +189,7 @@ class CpuInfo():
 
 
 class DisplayInfo():
-    """Retrieve information about a computers display."""
+    """Retrieve information about the computers display."""
 
     def _get_pci_device_info(self):
         """Retrieves all PCI device info from the lscpi command.
