@@ -317,28 +317,25 @@ class DisplayInfo():
 
 class HarddriveInfo():
 
-    def __init__(self):
+    def _get_df_output(self):
+        # df options:
+        # 'h': print sizes in human readable format ('k' = KB)
+        # 'l': local file systems. 'T': file system type (ext3/ext4/db)
+        cmd = ['df', '-hklT']
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        raw_output, _ = process.communicate()
 
-        self._hdd_list = []
+        return raw_output
 
-        try:
-            # df options:
-            # 'h': print sizes in human readable format ('k' = KB)
-            # 'l': local file systems. 'T': file system type (ext3/ext4/db)
-            cmd = ['df', '-hklT']
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            self._raw_output, _stderr = process.communicate()
-            self._parse_output()
-        except Exception as e:
-            logger.error("Error reading hard drive info.", 'error')
-            logger.exception(e)
-            self._hdd_list = []  # Something went wrong, set to empty list.
+    def _parse_df_output(self, raw_output):
+        hdd_list = []
+        output = []
 
-    def _parse_output(self):
-        self._output = []
-        for line in self._raw_output.splitlines():
-            self._output.append([x for x in line.split(' ') if x != ''])
+        for line in raw_output.splitlines():
+            #output.append([x for x in line.split(' ') if x != ''])
+            output.append(line.split())
 
+        # Headers of the information table in raw_output
         _partition_blacklist = [
             'tmpfs',
             'rootfs',
@@ -347,19 +344,29 @@ class HarddriveInfo():
             'Filesystem'
         ]
 
+        # tmp_dict is outside of for loop due to entries being split
+        # through multiple lines. Therefore the rest of the input gets
+        # picked up after the first line for the entry.
         tmp_dict = {}
-        for entry in self._output:
+        for entry in output:
+
+            if not entry:
+                continue
 
             if entry[0] in _partition_blacklist:
                 continue
 
             # An ideal entry would consist of 7 items. It would look like:
+            # Filesystem     Type  1K-blocks   Used   Available  Use%  Mounted on
             # ['/dev/sda1', 'ext4', '495844', '38218', '432026', '9%', '/boot']
             if len(entry) == 7:
                 tmp_dict['name'] = entry[0]
 
-                tmp_dict['size_kb'] = int(entry[3]) + int(entry[4])
-                tmp_dict['free_size_kb'] = entry[4]
+                used = int(entry[3])
+                available = int(entry[4])
+
+                tmp_dict['size_kb'] = used + available
+                tmp_dict['free_size_kb'] = available
                 tmp_dict['file_system'] = entry[1]
             else:
                 # But less then 7 items means the name of the partition and its
@@ -375,10 +382,21 @@ class HarddriveInfo():
                     tmp_dict['free_size_kb'] = entry[3]
                     tmp_dict['file_system'] = entry[0]
 
-            self._hdd_list.append(tmp_dict.copy())
+            hdd_list.append(tmp_dict.copy())
+
+        return hdd_list
 
     def get_hdd_list(self):
-        return self._hdd_list
+        try:
+            raw_output = self._get_df_output()
+            hdd_list = self._parse_df_output(raw_output)
+
+        except Exception as e:
+            logger.error("Error getting hard drive info.")
+            logger.exception(e)
+            hdd_list = []  # Something went wrong, set to empty list.
+
+        return hdd_list
 
 
 class NicInfo():

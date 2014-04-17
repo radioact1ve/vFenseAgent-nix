@@ -197,7 +197,45 @@ class TestDisplayInfoMac(unittest.TestCase):
 
 
 class TestHarddriveInfoLinux(unittest.TestCase):
-    pass
+    df_output = \
+"""
+Filesystem                                             Type      1K-blocks    Used  Available Use% Mounted on
+rootfs                                                 rootfs     19751804 4001308   14747132  22% /
+udev                                                   devtmpfs      10240       0      10240   0% /dev
+tmpfs                                                  tmpfs        205780     628     205152   1% /run
+/dev/disk/by-uuid/4c27d106-25c1-4fe4-9484-f5f50a8fc707 ext4       19751804 4001308   14747132  22% /
+tmpfs                                                  tmpfs          5120       0       5120   0% /run/lock
+tmpfs                                                  tmpfs        591760     224     591536   1% /run/shm
+none                                                   prl_fs   4294967296       0 4294967296   0% /media/psf
+/dev/sr0                                               iso9660       14680   14680          0 100% /media/cdrom0
+"""
+
+    def test_hdd_list(self):
+        hdd_info = hardware.HarddriveInfo()
+        hdd_info._get_df_output = lambda: self.df_output
+
+        expected = [
+            {
+                'free_size_kb': 10240,
+                'name': 'udev',
+                'size_kb': 10240,
+                'file_system': 'devtmpfs'
+            },
+            {
+                'free_size_kb': 14747132,
+                'name': '/dev/disk/by-uuid/4c27d106-25c1-4fe4-9484-f5f50a8fc707',
+                'size_kb': 18748440,
+                'file_system': 'ext4'
+            },
+            {
+                'free_size_kb': 0,
+                'name': '/dev/sr0',
+                'size_kb': 14680,
+                'file_system': 'iso9660'
+            }
+        ]
+
+        self.assertEqual(hdd_info.get_hdd_list(), expected)
 
 
 class TestHarddriveInfoMac(unittest.TestCase):
