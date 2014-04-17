@@ -18,7 +18,7 @@ def get_hw_info():
         hw_info = MacHardware().get_specs()
     else:
         hw_info['cpu'] = CpuInfo().get_cpu_list()
-        hw_info['memory'] = get_total_ram()
+        hw_info['memory'] = MemoryInfo().get_total_ram()
         hw_info['display'] = DisplayInfo().get_display_list()
         hw_info['storage'] = HarddriveInfo().get_hdd_list()
         hw_info['nic'] = NicInfo().get_nic_list()
@@ -456,23 +456,31 @@ class NicInfo():
                 self._nics.append(temp_dict.copy())
 
     def get_nic_list(self):
-
         return self._nics
 
 
-def get_total_ram():
+class MemoryInfo():
 
-    try:
+    def _get_meminfo_data(self):
         cmd = ['cat', '/proc/meminfo']
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        _raw_output, _stderr = process.communicate()
+        raw_output, _ = process.communicate()
 
-        total_output = _raw_output.splitlines()[0]
-        mem = total_output.partition(":")[2].split(" ")[-2]
+        return raw_output
 
-    except Exception as e:
-        logger.error("Error reading memory info.", 'error')
-        logger.exception(e)
-        mem = settings.EmptyValue
+    def _parse_meminfo_data(self, raw_output):
+        total_output = raw_output.splitlines()[0]
+        return total_output.partition(":")[2].split(" ")[-2]
 
-    return mem
+    def get_total_ram(self):
+
+        try:
+            meminfo_data = self._get_meminfo_data()
+            mem = self._parse_meminfo_data(meminfo_data)
+
+        except Exception as e:
+            logger.error("Error reading memory info.", 'error')
+            logger.exception(e)
+            mem = settings.EmptyValue
+
+        return mem
