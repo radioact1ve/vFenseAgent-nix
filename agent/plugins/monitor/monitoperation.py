@@ -1,4 +1,4 @@
-from utils import settings
+from src.utils import settings
 
 from serveroperation.sofoperation import SofOperation
 from serveroperation.sofoperation import OperationKey

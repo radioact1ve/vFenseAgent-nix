@@ -4,17 +4,18 @@ import urllib
 import shutil
 import hashlib
 
-from utils import settings, logger, utilcmds, updater
+from src.utils import settings, logger, utilcmds, updater
 from datetime import datetime
 from rv.data.application import CreateApplication
-from rv.rvsofoperation import RvError, InstallResult, UninstallResult, CpuPriority
+from rv.rvsofoperation import RvError, InstallResult, UninstallResult, \
+    CpuPriority
 
 
 class FileDataKeys():
-    uri = "file_uri"
-    hash = "file_hash"
-    name = "file_name"
-    size = "file_size"
+    uri = 'file_uri'
+    hash = 'file_hash'
+    name = 'file_name'
+    size = 'file_size'
 
 
 class PkgDictValues():
@@ -46,7 +47,32 @@ class DebianHandler():
     PARSE_DATE_FORMAT = '%a, %d %b %Y %H:%M:%S %Z'
 
     def __init__(self):
+        self.update_notifier_installed = False
+
         self.utilcmds = utilcmds.UtilCmds()
+        self._check_for_dependencies()
+
+    def _check_for_dependencies(self):
+        installed_packages = self._get_installed_packages()
+
+        if 'update-notifier-common' in installed_packages:
+            self.update_notifier_installed = True
+            logger.debug("Optional dependency found: 'update-notifier-common'")
+
+    def _check_for_reboot_required(self):
+        if self.update_notifier_installed:
+            if os.path.exists('/var/run/reboot-required'):
+                logger.debug("Found reboot required file.")
+                return True
+
+            logger.debug("Did not find reboot-required file.")
+
+        logger.debug(
+            ("update-notifier-common dependency missing, could "
+             "not check for restart required.")
+        )
+
+        return False
 
     def _apt_update_index(self):
         """Update index files."""
@@ -55,12 +81,13 @@ class DebianHandler():
 
         cmd = [self.APT_GET_EXE, 'update']
         # TODO: if failure return an indication
-        #result, err = self.utilcmds.run_command(cmd)
-        self.utilcmds.run_command(cmd)
+        _, err = self.utilcmds.run_command(cmd)
+        if err:
+            logger.error(err)
 
         logger.debug('Done updating index.')
 
-    # TODO: find something better *************
+    # TODO: find something better
     def _get_install_date(self, package_name):
         """Get the install date of a package.
 
@@ -91,7 +118,7 @@ class DebianHandler():
 
     def _get_release_date(self, uri):
 
-        # TODO URGENT: figure out how to make it so that the whole
+        # TODO: figure out how to make it so that the whole
         # agent doesn't freeze up when user has a bad internet
         # connection
 
@@ -205,8 +232,8 @@ class DebianHandler():
                 release_date,
                 installed,
                 repo,
-                "no",  # TODO(urgent): figure out if an app requires a  reboot
-                "yes"  # TODO(urgent): figure out if an app is uninstallable
+                'no',  # TODO: how to know if an update requires reboot?
+                'yes'  # TODO: figure out if an app is uninstallable
             )
 
         return application
@@ -236,14 +263,6 @@ class DebianHandler():
             #which in that case we need to add a \n to the front anyways.
             regexable = '\n' + info
             data_dictionary = self._parse_info(regexable)
-
-# TODO: Commenting out because of no need for parsing dependencies, currently
-#            # Format dependencies properly
-#            if PkgDictValues.dependencies in data_dictionary:
-#
-#                dep_string = data_dictionary[PkgDictValues.dependencies]
-#                data_dictionary[PkgDictValues.dependencies] = \
-#                    self.dep_cleaner.separate_dependency_string(dep_string)
 
             all_info_list.append(data_dictionary)
 
@@ -445,7 +464,7 @@ class DebianHandler():
 
             package_repo = self._parse_repo_from_cache(pkg_name, pkg_version)
 
-            # Includes new package and old packages
+            # Includes new packages and old packages
             package_options = self._parse_info_into_list(available_info)
 
             for option in package_options:
@@ -595,10 +614,6 @@ class DebianHandler():
             if app:
                 apps.append(app)
 
-        #if strip_deps:
-        #    # Mutates the dependencies attribute
-        #    self.dep_cleaner.clean_app_dependencies(apps)
-
         return apps
 
     def _apt_clean(self):
@@ -628,8 +643,6 @@ class DebianHandler():
             package_name
         ]
 
-        #TODO: figure out if restart needed
-        restart = 'false'
 
         # TODO: parse out the error, if any
         try:
@@ -646,11 +659,11 @@ class DebianHandler():
             logger.error('Faled to install {0}'.format(package_name))
             logger.exception(e)
 
-            return 'false', str(e), restart
+            return 'false', str(e)
 
         logger.debug('Done installing {0}'.format(package_name))
 
-        return 'true', '', restart
+        return 'true', ''
 
     def _move_pkgs_to_apt_dir(self, packages_dir):
         log_message = ('moving packages in {0} *** to *** {1}'
@@ -746,9 +759,11 @@ class DebianHandler():
         moving_error = self._move_pkgs_to_apt_dir(packages_dir)
 
         if not moving_error:
-            success, error, restart = self._apt_install(
+            success, error = self._apt_install(
                 install_data.name, install_data.proc_niceness
             )
+
+            restart = self._check_for_reboot_required()
 
             if success == 'true':
 
@@ -760,8 +775,6 @@ class DebianHandler():
 
         else:
             error = moving_error
-
-        # TODO(urgent): should I apt-get clean here or in rv_plugin?
 
         return InstallResult(
             success,

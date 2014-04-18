@@ -2,7 +2,7 @@ import json
 import subprocess
 
 from agentplugin import AgentPlugin
-from utils import RepeatTimer, logger, settings, systeminfo
+from src.utils import RepeatTimer, logger, settings, systeminfo
 
 from monitor.monitoperation import MonitOperation, MonitOperationValue, MonitKey
 from monitor.mac.macmonitor import MacMonitor

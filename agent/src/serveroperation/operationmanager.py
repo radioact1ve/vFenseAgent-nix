@@ -7,10 +7,16 @@ import json
 from net import netmanager
 from threading import Thread
 from data.sqlitemanager import SqliteManager
+<<<<<<< HEAD
 from utils import systeminfo, settings, logger, queuesave
 from serveroperation.sofoperation import SofOperation, SofResult, \
     SelfGeneratedOpId, OperationKey, OperationValue, ResultOperation, \
     ResponseUris
+=======
+from src.utils import systeminfo, settings, logger, queuesave
+from serveroperation.sofoperation import SofOperation, OperationKey, \
+    OperationValue, ResultOperation, ResponseUris
+>>>>>>> development
 
 
 class OperationManager():

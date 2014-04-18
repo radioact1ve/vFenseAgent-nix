@@ -6,7 +6,7 @@ import json
 
 from agentplugin import AgentPlugin
 from rv.data.application import CreateApplication
-from utils import RepeatTimer, settings, logger, systeminfo, uninstaller, throd
+from src.utils import RepeatTimer, settings, logger, systeminfo, uninstaller, throd
 from serveroperation.sofoperation import SofOperation, OperationKey, \
     OperationValue
 from rvsofoperation import RvSofOperation, RvError, RvOperationValue, \
@@ -23,9 +23,46 @@ class RvPlugin(AgentPlugin):
 
         self._name = RvPlugin.Name
         self._update_directory = settings.UpdatesDirectory
-        self._operation_handler = self._create_op_handler()
+        self._operation_handler = self._get_op_handler()
         self.uninstaller = uninstaller.Uninstaller()
         self.throd = throd.ThrottleDownload()
+
+    def _get_op_handler(self):
+
+        plat = systeminfo.code()
+
+        if plat == 'darwin':
+            from operationhandler.machandler import MacOpHandler
+            return MacOpHandler()
+
+        elif plat == 'linux':
+            distro = platform.linux_distribution()[0].lower()
+
+            # List to check RedHat derived distros that use yum.
+            _redhat = 'red hat enterprise linux server'
+            _rpm_distros = ['fedora', 'centos', 'centos linux']
+            _debian_distros = ['debian', 'ubuntu', 'linuxmint']
+
+            if distro == _redhat:
+                from operationhandler.rhelhandler import RhelOpHandler
+                logger.debug('Using RhelOpHandler.')
+                return RhelOpHandler()
+
+            if distro in _rpm_distros:
+                from operationhandler.rpmhandler import RpmOpHandler
+                logger.debug('Using RpmOpHandler.')
+                return RpmOpHandler()
+
+            elif distro in _debian_distros:
+                from operationhandler.debhandler import DebianHandler
+                logger.debug('Using DebianHandler.')
+                return DebianHandler()
+        else:
+            logger.critical(
+                "Current platform '%s' isn't supported. Ignoring operations." %
+                plat
+            )
+            return None
 
     def start(self):
         """ Runs once the agent core is initialized.
@@ -398,7 +435,6 @@ class RvPlugin(AgentPlugin):
             applications.
 
         """
-        # TODO: not sure if this should go here or in the core
         self._check_if_updated()
 
         if operation_type == OperationValue.Startup:
@@ -406,8 +442,9 @@ class RvPlugin(AgentPlugin):
 
             return None
 
-        data = {}
-        data['data'] = self.refresh_apps()
+        data = {
+            'data': self.refresh_apps()
+        }
 
         return data
 
@@ -432,43 +469,6 @@ class RvPlugin(AgentPlugin):
         """
 
         self._register_operation = callback
-
-    def _create_op_handler(self):
-
-        plat = systeminfo.code()
-
-        if plat == 'darwin':
-            from operationhandler.machandler import MacOpHandler
-            return MacOpHandler()
-
-        elif plat == 'linux':
-            distro = platform.linux_distribution()[0].lower()
-
-            # List to check RedHat derived distros that use yum.
-            _redhat = 'red hat enterprise linux server'
-            _rpm_distros = ['fedora', 'centos', 'centos linux']
-            _debian_distros = ['debian', 'ubuntu', 'linuxmint']
-
-            if distro == _redhat:
-                from operationhandler.rhelhandler import RhelOpHandler
-                logger.debug('Using RhelOpHandler.')
-                return RhelOpHandler()
-
-            if distro in _rpm_distros:
-                from operationhandler.rpmhandler import RpmOpHandler
-                logger.debug('Using RpmOpHandler.')
-                return RpmOpHandler()
-
-            elif distro in _debian_distros:
-                from operationhandler.debhandler import DebianHandler
-                logger.debug('Using DebianHandler.')
-                return DebianHandler()
-        else:
-            logger.critical(
-                "Current platform '%s' isn't supported. Ignoring operations." %
-                plat
-            )
-            return None
 
     def _recreate_db_tables(self):
         """ Drops all tables and calls respected methods to populate them with

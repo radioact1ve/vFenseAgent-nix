@@ -1,6 +1,6 @@
 import subprocess
 
-from utils import logger
+from src.utils import logger
 
 class DmgMounter:
     def __init__(self):

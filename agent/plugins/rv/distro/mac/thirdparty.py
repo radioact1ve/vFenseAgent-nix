@@ -5,7 +5,7 @@ applications. Fun!
 import os
 import subprocess
 
-from utils import logger
+from src.utils import logger
 from rv.data.application import Application
 from rv.data.application import CreateApplication
 

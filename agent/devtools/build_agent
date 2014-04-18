@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import shutil
+import fnmatch
 import subprocess
 
 BUILD_DIRS = ['../bin', '../daemon', '../plugins', '../src', '../deps']
@@ -33,10 +34,10 @@ INSTALL_SCRIPT = 'agent_utils'
 COMPILED_PYTHON_PATHS = {
     'mac': 'agent/deps/mac/Python-2.7.5/',
     #'deb': 'agent/deps/deb/Python-2.7.5/',
-    'rpm': 'agent/deps/rpm/Python-2.7.5/',
-    'rpm6': 'agent/deps/rpm6/Python-2.7.5/',
-    'rpm-32': 'agent/deps/rpm-32/Python-2.7.5/',
-    'rpm6-32': 'agent/deps/rpm6-32/Python-2.7.5/'
+    'rpm5_64': 'agent/deps/rpm/Python-2.7.5/',
+    'rpm6_64': 'agent/deps/rpm6/Python-2.7.5/',
+    'rpm5_32': 'agent/deps/rpm-32/Python-2.7.5/',
+    'rpm6_32': 'agent/deps/rpm6-32/Python-2.7.5/'
 }
 
 
@@ -71,6 +72,12 @@ def remove_compiled_pythons(agent_pkg_dir, platform):
             shutil.rmtree(
                 os.path.join(agent_pkg_dir, COMPILED_PYTHON_PATHS[py_path])
             )
+
+
+def remove_pyc_files(root_dir):
+    for root, dirnames, filenames in os.walk(root_dir):
+        for filename in fnmatch.filter(filenames, '*.pyc'):
+            os.remove(os.path.join(root, filename))
 
 
 def modify_config_version(config_path, version):
@@ -166,6 +173,9 @@ def build(version, platform):
     print 'Removing unnecessary compiled pythons.'
     remove_compiled_pythons(agent_pkg_dir, platform)
 
+    print 'Removing all pyc files from build folder.'
+    remove_pyc_files(agent_dir_path)
+
     print 'Setting agent version.'
     modify_config_version(
         os.path.join(agent_dir_path, 'agent.config'), version
@@ -187,12 +197,16 @@ def main():
         print 'Please follow the version format "x.x.x"'
         sys.exit(1)
 
-    if platform not in SUPPORTED_PLATFORMS:
+    if platform == 'all':
+        for platform in SUPPORTED_PLATFORMS:
+            build(version, platform)
+    elif platform in SUPPORTED_PLATFORMS:
+        build(version, platform)
+    else:
         print '{0} is not supported.'.format(platform)
         print 'Supported platforms are: {0}'.format(SUPPORTED_PLATFORMS.keys())
         sys.exit(1)
 
-    build(version, platform)
 
 if __name__ == '__main__':
     main()

@@ -1062,12 +1062,27 @@ class DebUtils:
         if 'TopPatch Agent is running' not in err:
             raise Exception(err)
 
+    def _install_dependencies(self, args):
+        optional_dependencies = {
+            'update-notifier-common':
+                ['apt-get', 'install', 'update-notifier-common', '-y']
+        }
+
+        # TODO: check if user doesn't want to install dependencies
+        for dep in optional_dependencies.values():
+            result, err = run_command(dep)
+
+            if err:
+                raise Exception(err)
+
     def install(self, args):
         errors = []
 
         check_user_input(args)
 
         try:
+            self._install_dependencies(args)
+
             self._clean_up()
             create_necessary_dirs()
 

@@ -6,9 +6,9 @@ import subprocess
 import hashlib
 import urllib
 
-from utils import logger, settings, utilcmds, updater
-from utils.distro.mac.plist import PlistInterface
-from utils.misc.htmlstripper import BodyHTMLStripper
+from src.utils import logger, settings, utilcmds, updater
+from src.utils.distro.mac.plist import PlistInterface
+from src.utils.misc.htmlstripper import BodyHTMLStripper
 
 from rv.rvsofoperation import RvError, InstallResult, UninstallResult
 from rv.data.application import CreateApplication

@@ -1,7 +1,7 @@
 import sqlite3
 
 from data.update import Update
-from utils import logger
+from src.utils import logger
 
 
 _db_file_path = '/opt/TopPatch/agent/db/agentdb.tpdb'

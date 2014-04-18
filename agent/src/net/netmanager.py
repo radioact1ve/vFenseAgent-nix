@@ -2,7 +2,7 @@ import os
 import json
 import requests
 
-from utils import settings, logger, RepeatTimer
+from src.utils import settings, logger, RepeatTimer
 from serveroperation.sofoperation import OperationKey, OperationValue, \
     RequestMethod, ResponseUris
 

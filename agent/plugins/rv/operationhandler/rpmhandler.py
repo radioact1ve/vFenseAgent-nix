@@ -5,7 +5,7 @@ import hashlib
 import subprocess
 
 from serveroperation.sofoperation import *
-from utils import logger, updater, utilcmds
+from src.utils import logger, updater, utilcmds
 
 from rv.data.application import CreateApplication
 from rv.rvsofoperation import InstallResult, UninstallResult, RvOperationKey

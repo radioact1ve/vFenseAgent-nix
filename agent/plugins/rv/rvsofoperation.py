@@ -2,9 +2,14 @@ import json
 
 from collections import namedtuple
 
+<<<<<<< HEAD
 from utils import logger
 from serveroperation.sofoperation import SofOperation, OperationKey, \
     OperationError
+=======
+from serveroperation.sofoperation import SofOperation, OperationError
+from src.utils import logger
+>>>>>>> development
 
 
 class RvOperationValue():

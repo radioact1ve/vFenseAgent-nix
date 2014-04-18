@@ -1,7 +1,7 @@
 import time
 import uuid
 
-from utils import settings
+from src.utils import settings
 try:
     import simplejson as json
 except ImportError:
