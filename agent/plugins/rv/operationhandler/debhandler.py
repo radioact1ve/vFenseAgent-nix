@@ -55,18 +55,19 @@ class DebianHandler():
 
     def _check_for_dependencies(self):
         installed_packages = self._get_installed_packages()
-        logger.debug("CHECKING FOR DEPENDENCIES>")
 
         if 'update-notifier-common' in installed_packages:
-            logger.debug("YES, UPDATE NOTIFIER INSTALLED.")
             self.update_notifier_installed = True
-            logger.debug("{0}".format(self.update_notifier_installed))
+            logger.debug("Optional dependency found: 'update-notifier-common'")
 
     # TODO: change to return boolean values
     def _check_for_reboot_required(self):
         if self.update_notifier_installed:
             if os.path.exists('/var/run/reboot-required'):
+                logger.debug("Found reboot required file.")
                 return 'yes'
+
+            logger.debug("Did not find reboot-required file.")
 
         return 'no'
 
@@ -227,8 +228,8 @@ class DebianHandler():
                 release_date,
                 installed,
                 repo,
-                self._check_for_reboot_required(),
-                "yes"  # TODO(urgent): figure out if an app is uninstallable
+                'no',  # TODO(urgent): how to know if an update requires reboot?
+                'yes'  # TODO(urgent): figure out if an app is uninstallable
             )
 
         return application
@@ -638,8 +639,6 @@ class DebianHandler():
             package_name
         ]
 
-        #TODO: figure out if restart needed
-        restart = 'false'
 
         # TODO: parse out the error, if any
         try:
@@ -656,11 +655,11 @@ class DebianHandler():
             logger.error('Faled to install {0}'.format(package_name))
             logger.exception(e)
 
-            return 'false', str(e), restart
+            return 'false', str(e)
 
         logger.debug('Done installing {0}'.format(package_name))
 
-        return 'true', '', restart
+        return 'true', ''
 
     def _move_pkgs_to_apt_dir(self, packages_dir):
         log_message = ('moving packages in {0} *** to *** {1}'
@@ -756,9 +755,11 @@ class DebianHandler():
         moving_error = self._move_pkgs_to_apt_dir(packages_dir)
 
         if not moving_error:
-            success, error, restart = self._apt_install(
+            success, error = self._apt_install(
                 install_data.name, install_data.proc_niceness
             )
+
+            restart = self._check_for_reboot_required()
 
             if success == 'true':
 
