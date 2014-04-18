@@ -3,9 +3,9 @@ import socket, ssl, json
 import platform
 
 from serveroperation.sofoperation import SofOperation
-from utils import settings
-from utils import logger
-from utils import certificate
+from src.utils import settings
+from src.utils import logger
+from src.utils import certificate
 
 _message_delimiter = '<EOF>'
 

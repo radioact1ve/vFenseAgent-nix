@@ -7,7 +7,7 @@ import json
 from net import netmanager
 from threading import Thread
 from data.sqlitemanager import SqliteManager
-from utils import systeminfo, settings, logger, queuesave
+from src.utils import systeminfo, settings, logger, queuesave
 from serveroperation.sofoperation import SofOperation, SelfGeneratedOpId, \
     OperationKey, OperationValue, ResultOperation, ResponseUris
 

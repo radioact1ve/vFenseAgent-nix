@@ -1,7 +1,7 @@
 import sqlite3
 
-from utils import settings
-from utils import logger
+from src.utils import settings
+from src.utils import logger
 
 
 class SqliteManager():

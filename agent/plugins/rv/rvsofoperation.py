@@ -5,8 +5,8 @@ from collections import namedtuple
 from serveroperation.sofoperation import SofOperation
 from serveroperation.sofoperation import OperationError
 
-from utils import logger
-from utils import settings
+from src.utils import logger
+from src.utils import settings
 
 
 class RvOperationValue():

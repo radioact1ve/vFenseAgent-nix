@@ -1,8 +1,8 @@
 import sqlite3
 import os
 
-from utils import settings
-from utils import logger
+from src.utils import settings
+from src.utils import logger
 
 
 class SqliteMac():

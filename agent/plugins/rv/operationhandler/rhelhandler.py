@@ -11,7 +11,7 @@ import time
 import hashlib
 import subprocess
 
-from utils import logger, settings, utilcmds
+from src.utils import logger, settings, utilcmds
 
 from rv.distro.redhat import yum
 from rv.operationhandler.rpmhandler import RpmOpHandler

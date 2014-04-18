@@ -3,10 +3,10 @@ import signal
 import subprocess
 import time
 
-from utils import settings
-from utils import misc
-from utils import systeminfo
-from utils import logger
+from src.utils import settings
+from src.utils import misc
+from src.utils import systeminfo
+from src.utils import logger
 
 PortRange = reversed(range(10000, 11000))
 

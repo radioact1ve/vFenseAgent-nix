@@ -2,10 +2,10 @@ import socket, ssl, json, time
 
 from threading import Timer
 
-from utils import settings
-from utils import logger
-from utils import certificate
-from utils import RepeatTimer
+from src.utils import settings
+from src.utils import logger
+from src.utils import certificate
+from src.utils import RepeatTimer
 
 class NetworkSender():
 

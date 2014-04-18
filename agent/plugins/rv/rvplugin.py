@@ -6,7 +6,7 @@ import json
 
 from agentplugin import AgentPlugin
 from rv.data.application import CreateApplication
-from utils import RepeatTimer, settings, logger, systeminfo, uninstaller, throd
+from src.utils import RepeatTimer, settings, logger, systeminfo, uninstaller, throd
 from serveroperation.sofoperation import SofOperation, OperationKey, \
     OperationValue
 from rvsofoperation import RvSofOperation, RvError, RvOperationValue, \
