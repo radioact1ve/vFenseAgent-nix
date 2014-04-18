@@ -51,16 +51,24 @@ class DebianHandler():
 
         self.update_notifier_installed = False
 
-        #self._check_for_dependencies()
+        self._check_for_dependencies()
 
     def _check_for_dependencies(self):
-        return
         installed_packages = self._get_installed_packages()
+        logger.debug("CHECKING FOR DEPENDENCIES>")
 
         if 'update-notifier-common' in installed_packages:
             logger.debug("YES, UPDATE NOTIFIER INSTALLED.")
             self.update_notifier_installed = True
             logger.debug("{0}".format(self.update_notifier_installed))
+
+    # TODO: change to return boolean values
+    def _check_for_reboot_required(self):
+        if self.update_notifier_installed:
+            if os.path.exists('/var/run/reboot-required'):
+                return 'yes'
+
+        return 'no'
 
     def _apt_update_index(self):
         """Update index files."""
@@ -219,7 +227,7 @@ class DebianHandler():
                 release_date,
                 installed,
                 repo,
-                "no",  # TODO(urgent): figure out if an app requires a  reboot
+                self._check_for_reboot_required(),
                 "yes"  # TODO(urgent): figure out if an app is uninstallable
             )
 
@@ -250,14 +258,6 @@ class DebianHandler():
             #which in that case we need to add a \n to the front anyways.
             regexable = '\n' + info
             data_dictionary = self._parse_info(regexable)
-
-# TODO: Commenting out because of no need for parsing dependencies, currently
-#            # Format dependencies properly
-#            if PkgDictValues.dependencies in data_dictionary:
-#
-#                dep_string = data_dictionary[PkgDictValues.dependencies]
-#                data_dictionary[PkgDictValues.dependencies] = \
-#                    self.dep_cleaner.separate_dependency_string(dep_string)
 
             all_info_list.append(data_dictionary)
 
@@ -608,10 +608,6 @@ class DebianHandler():
 
             if app:
                 apps.append(app)
-
-        #if strip_deps:
-        #    # Mutates the dependencies attribute
-        #    self.dep_cleaner.clean_app_dependencies(apps)
 
         return apps
 
