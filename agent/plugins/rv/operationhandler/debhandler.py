@@ -7,7 +7,8 @@ import hashlib
 from utils import settings, logger, utilcmds, updater
 from datetime import datetime
 from rv.data.application import CreateApplication
-from rv.rvsofoperation import RvError, InstallResult, UninstallResult, CpuPriority
+from rv.rvsofoperation import RvError, InstallResult, UninstallResult, \
+    CpuPriority
 
 
 class FileDataKeys():
@@ -47,6 +48,19 @@ class DebianHandler():
 
     def __init__(self):
         self.utilcmds = utilcmds.UtilCmds()
+
+        self.update_notifier_installed = False
+
+        #self._check_for_dependencies()
+
+    def _check_for_dependencies(self):
+        return
+        installed_packages = self._get_installed_packages()
+
+        if 'update-notifier-common' in installed_packages:
+            logger.debug("YES, UPDATE NOTIFIER INSTALLED.")
+            self.update_notifier_installed = True
+            logger.debug("{0}".format(self.update_notifier_installed))
 
     def _apt_update_index(self):
         """Update index files."""
@@ -445,7 +459,7 @@ class DebianHandler():
 
             package_repo = self._parse_repo_from_cache(pkg_name, pkg_version)
 
-            # Includes new package and old packages
+            # Includes new packages and old packages
             package_options = self._parse_info_into_list(available_info)
 
             for option in package_options:
