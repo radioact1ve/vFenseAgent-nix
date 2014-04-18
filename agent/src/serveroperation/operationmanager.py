@@ -8,8 +8,8 @@ from net import netmanager
 from threading import Thread
 from data.sqlitemanager import SqliteManager
 from src.utils import systeminfo, settings, logger, queuesave
-from serveroperation.sofoperation import SofOperation, SelfGeneratedOpId, \
-    OperationKey, OperationValue, ResultOperation, ResponseUris
+from serveroperation.sofoperation import SofOperation, OperationKey, \
+    OperationValue, ResultOperation, ResponseUris
 
 
 class OperationManager():
