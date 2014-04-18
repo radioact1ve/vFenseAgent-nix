@@ -2,9 +2,9 @@ import os
 import json
 import glob
 
-from utils import logger
-from utils import settings
-from utils.distro.mac.plist import PlistInterface
+from src.utils import logger
+from src.utils import settings
+from src.utils.distro.mac.plist import PlistInterface
 
 
 class UpdatesCatalog:

@@ -5,8 +5,8 @@ import gzip
 import urllib
 from ConfigParser import ConfigParser
 
-from utils import logger
-from utils import settings
+from src.utils import logger
+from src.utils import settings
 
 from rv.distro.redhat import yum
 from rv.distro.redhat.yum import MetaPackage, Repo

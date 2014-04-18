@@ -5,10 +5,10 @@ import shutil
 import errno
 import time
 
-from utils import settings
-from utils import logger
-from utils.distro.mac import launchd
-from utils.distro.mac.plist import PlistInterface
+from src.utils import settings
+from src.utils import logger
+from src.utils.distro.mac import launchd
+from src.utils.distro.mac.plist import PlistInterface
 
 from rv.rvsofoperation import CpuPriority
 

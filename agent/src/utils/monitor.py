@@ -2,9 +2,9 @@
 
 import subprocess
 
-from utils import logger
-#from utils.distro.mac.macmonitor import mac_monitor_data
-from utils import systeminfo
+from src.utils import logger
+#from src.utils.distro.mac.macmonitor import mac_monitor_data
+from src.utils import systeminfo
 
 
 def calculate_percentage(total, diff):

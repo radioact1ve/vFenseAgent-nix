@@ -4,7 +4,7 @@ import urllib
 import shutil
 import hashlib
 
-from utils import settings, logger, utilcmds, updater
+from src.utils import settings, logger, utilcmds, updater
 from datetime import datetime
 from rv.data.application import CreateApplication
 from rv.rvsofoperation import RvError, InstallResult, UninstallResult, CpuPriority

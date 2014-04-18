@@ -2,9 +2,9 @@ import os
 import stat
 import subprocess
 
-from utils import settings
-from utils import systeminfo
-from utils import logger
+from src.utils import settings
+from src.utils import systeminfo
+from src.utils import logger
 
 VinePath = os.path.join(settings.BinDirectory, 'vine-server')
 

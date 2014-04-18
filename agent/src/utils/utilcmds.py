@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from utils import settings
+from src.utils import settings
 
 class UtilCmds():
 

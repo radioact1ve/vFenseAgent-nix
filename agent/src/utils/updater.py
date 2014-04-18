@@ -3,8 +3,8 @@ import tarfile
 import shutil
 import zipfile
 
-from utils import logger, utilcmds
-from utils.distro.mac import DmgMounter
+from src.utils import logger, utilcmds
+from src.utils.distro.mac import DmgMounter
 
 
 class Updater():

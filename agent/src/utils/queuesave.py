@@ -1,7 +1,7 @@
 import os
 import cPickle
 
-from utils import settings, logger
+from src.utils import settings, logger
 from serveroperation.operationqueue import OperationQueue
 from serveroperation.sofoperation import SofOperation, ResultOperation
 

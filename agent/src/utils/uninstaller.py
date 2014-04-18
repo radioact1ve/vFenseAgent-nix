@@ -1,4 +1,4 @@
-from utils import logger, utilcmds
+from src.utils import logger, utilcmds
 
 class Uninstaller():
 

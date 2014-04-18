@@ -5,8 +5,8 @@ import time
 import inspect
 import urllib2
 
-from utils import settings
-from utils import logger
+from src.utils import settings
+from src.utils import logger
 
 deps_dir = os.path.join(settings.AgentDirectory, 'deps')
 sys.path.append(deps_dir)

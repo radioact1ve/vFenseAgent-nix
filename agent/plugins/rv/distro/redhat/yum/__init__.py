@@ -5,7 +5,7 @@ import ast
 from collections import namedtuple
 from ConfigParser import ConfigParser
 
-from utils import logger
+from src.utils import logger
 
 YumUpdate = namedtuple('YumUpdate', ['name', 'version', 'release',
                                      'arch', 'repo'])

@@ -1,6 +1,6 @@
 import Queue
 
-from utils import logger
+from src.utils import logger
 
 
 class OperationQueue():

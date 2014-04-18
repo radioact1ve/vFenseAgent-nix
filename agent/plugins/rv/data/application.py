@@ -1,6 +1,6 @@
 import datetime
 
-from utils import settings
+from src.utils import settings
 
 
 class Application():
