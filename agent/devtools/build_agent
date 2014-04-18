@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import shutil
+import fnmatch
 import subprocess
 
 BUILD_DIRS = ['../bin', '../daemon', '../plugins', '../src', '../deps']
@@ -71,6 +72,12 @@ def remove_compiled_pythons(agent_pkg_dir, platform):
             shutil.rmtree(
                 os.path.join(agent_pkg_dir, COMPILED_PYTHON_PATHS[py_path])
             )
+
+
+def remove_pyc_files(root_dir):
+    for root, dirnames, filenames in os.walk(root_dir):
+        for filename in fnmatch.filter(filenames, '*.pyc'):
+            os.remove(os.path.join(root, filename))
 
 
 def modify_config_version(config_path, version):
@@ -165,6 +172,9 @@ def build(version, platform):
 
     print 'Removing unnecessary compiled pythons.'
     remove_compiled_pythons(agent_pkg_dir, platform)
+
+    print 'Removing all pyc files from build folder.'
+    remove_pyc_files(agent_dir_path)
 
     print 'Setting agent version.'
     modify_config_version(
