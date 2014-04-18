@@ -27,7 +27,8 @@ class Application():
         self.repo = ""
 
         # TODO: Implement on all handlers
-        self.reboot_required = "no"
+        #self.reboot_required = "no"
+        self.reboot_required = False
         self.uninstallable = "yes"
 
         # Properties not applicable to *nix.

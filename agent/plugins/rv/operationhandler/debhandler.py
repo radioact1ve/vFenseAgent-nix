@@ -65,11 +65,12 @@ class DebianHandler():
         if self.update_notifier_installed:
             if os.path.exists('/var/run/reboot-required'):
                 logger.debug("Found reboot required file.")
-                return 'yes'
+                #return 'yes'
+                return True
 
             logger.debug("Did not find reboot-required file.")
 
-        return 'no'
+        return False
 
     def _apt_update_index(self):
         """Update index files."""
