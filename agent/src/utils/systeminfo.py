@@ -162,8 +162,6 @@ class MachineType():
         ]
         self.dmidecode_path = self._get_dmidecode_path()
 
-        pass
-
     def _get_dmidecode_path(self):
         known_paths = [
             '/usr/sbin/dmidecode',
