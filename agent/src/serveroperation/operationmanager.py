@@ -594,6 +594,7 @@ class OperationManager():
             'version': systeminfo.version(),
             'bit_type': systeminfo.bit_type(),
             'computer_name': systeminfo.computer_name(),
+            'machine_type': systeminfo.MachineType.get_machine_type(),
             'host_name': ''  # TODO: Implement
         }
 

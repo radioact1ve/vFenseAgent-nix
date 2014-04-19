@@ -1,10 +1,10 @@
+import os
 import platform
 import subprocess
 import socket
-import utils.hardware
 
-import logger
 from distro import mac
+from src.utils import hardware, logger
 
 
 supported_linux_distros = (
@@ -149,3 +149,43 @@ def uptime():
         logger.exception(e)
 
     return up
+
+
+class MachineType():
+    def __init__(self):
+        self.known_virtual_machines = [
+            'Parallels Virtual Platform',
+            'VMware Virtual Platform',
+            'VirtualBox',
+            'KVM',
+            'Bochs'
+        ]
+        self.dmidecode_path = self._get_dmidecode_path()
+
+        pass
+
+    def _get_dmidecode_path(self):
+        known_paths = [
+            '/usr/sbin/dmidecode',
+        ]
+
+        for path in known_paths:
+            if os.path.exists(path):
+                return path
+
+        return None
+
+    def get_machine_type(self):
+        if self.dmidecode_path:
+            cmd = [self.dmidecode_path, '-s', 'system-product-name']
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            output, err = proc.communicate()
+
+            if not err:
+                known_virtual_machines = \
+                    [x.lower() for x in self.known_virtual_machines]
+
+                if output.lower() in known_virtual_machines:
+                    return 'virtual'
+
+        return 'physical'
