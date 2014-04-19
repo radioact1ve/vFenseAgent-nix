@@ -649,8 +649,11 @@ class DebianHandler():
             result, err = self.utilcmds.run_command(install_command)
 
             if err:
+                err_lower = err.lower()
                 # Catch non-error related messages
-                if 'reading changelogs' in err.lower():
+                if 'reading changelogs' in err_lower:
+                    pass
+                elif 'dpkg-preconfigure: unable to re-open stdin' in err_lower:
                     pass
                 else:
                     raise Exception(err)

@@ -142,7 +142,7 @@ class YumParse():
         Returns:
             A list of dictionaries for each package.
         """
-        #sys_arch = systeminfo.system_architecture()
+        #sys_arch = systeminfo.get_system_architecture()
 
         clean_pkg_data = self._clean_up_info_updates(updates_data)
 

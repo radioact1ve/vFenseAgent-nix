@@ -21,7 +21,7 @@ class MonitorPlugin(AgentPlugin):
         self._previous_idle_cpu = 0
         self._previous_total_cpu = 0
 
-        if systeminfo.code() == systeminfo.OSCode.Mac:
+        if systeminfo.get_os_code() == systeminfo.OSCode.Mac:
 
             self._mac_monitor = MacMonitor()
 

@@ -6,7 +6,8 @@ import json
 
 from agentplugin import AgentPlugin
 from rv.data.application import CreateApplication
-from src.utils import RepeatTimer, settings, logger, systeminfo, uninstaller, throd
+from src.utils import RepeatTimer, settings, logger, systeminfo, uninstaller, \
+    throd
 from serveroperation.sofoperation import SofOperation, OperationKey, \
     OperationValue
 from rvsofoperation import RvSofOperation, RvError, RvOperationValue, \
@@ -29,7 +30,7 @@ class RvPlugin(AgentPlugin):
 
     def _get_op_handler(self):
 
-        plat = systeminfo.code()
+        plat = systeminfo.get_os_code()
 
         if plat == 'darwin':
             from operationhandler.machandler import MacOpHandler
