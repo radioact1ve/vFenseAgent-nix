@@ -2,9 +2,7 @@ import os
 import stat
 import subprocess
 
-from src.utils import settings
-from src.utils import systeminfo
-from src.utils import logger
+from src.utils import settings, systeminfo, logger
 
 VinePath = os.path.join(settings.BinDirectory, 'vine-server')
 
@@ -86,7 +84,7 @@ def _start_vine_vnc(port):
     cmd = [
         VinePath,
         "-rfbport", port,
-        "-desktop", systeminfo.computer_name(),
+        "-desktop", systeminfo.get_computer_name(),
         "-rfbauth", _vine_pwd_file,
         #"-SystemServer", "1",
         "-restartonuserswitch", "N",

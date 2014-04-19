@@ -589,21 +589,25 @@ class OperationManager():
     def system_info(self):
 
         sys_info = {
-            'os_code': systeminfo.code(),
-            'os_string': systeminfo.name(),
-            'version': systeminfo.version(),
-            'bit_type': systeminfo.bit_type(),
-            'computer_name': systeminfo.computer_name(),
-            'machine_type': systeminfo.MachineType.get_machine_type(),
+            'os_code': systeminfo.get_os_code(),
+            'os_string': systeminfo.get_os_string(),
+            'version': systeminfo.get_version(),
+            'bit_type': systeminfo.get_bit_type(),
+            'computer_name': systeminfo.get_computer_name(),
+            'machine_type': systeminfo.MachineType().get_machine_type(),
             'host_name': ''  # TODO: Implement
         }
 
-        logger.debug("System info sent: {0}".format(json.dumps(sys_info)))
+        logger.debug(
+            "System info sent: {0}".format(
+                json.dumps(sys_info, indent=4)
+            )
+        )
 
         return sys_info
 
     def hardware_info(self):
-        hardware_info = systeminfo.hardware()
+        hardware_info = systeminfo.get_hardware_info()
 
         logger.debug("Hardware info sent: {0}".format(hardware_info))
 

@@ -3,8 +3,7 @@ import re
 import platform
 
 from distro.mac.hardware import MacHardware
-from src.utils import settings
-from src.utils import logger
+from src.utils import settings, logger
 
 
 def get_hw_info():
