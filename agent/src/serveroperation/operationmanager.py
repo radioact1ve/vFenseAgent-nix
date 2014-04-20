@@ -661,7 +661,7 @@ class OperationManager():
                 with open(self._uptime_file, 'r') as f:
                     file_uptime = f.read()
 
-                    if current_uptime < long(file_uptime):
+                    if current_uptime < float(file_uptime):
                         boot_up = 'yes'
 
         except Exception as e:
