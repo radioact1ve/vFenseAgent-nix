@@ -4,9 +4,6 @@ import hashlib
 from src.utils import settings
 
 
-class AppUtils():
-
-
 class Application():
 
     def __init__(self):
