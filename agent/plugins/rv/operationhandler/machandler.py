@@ -11,7 +11,7 @@ from src.utils.distro.mac.plist import PlistInterface
 from src.utils.misc.htmlstripper import BodyHTMLStripper
 
 from rv.rvsofoperation import RvError, InstallResult, UninstallResult
-from rv.data.application import CreateApplication
+from rv.data.application import AppUtils
 #from rv.distro.mac.macsqlite import SqliteMac, UpdateDataColumn
 from rv.distro.mac.thirdparty import ThirdPartyManager
 from rv.distro.mac import PkgInstaller, DmgInstaller, Uninstaller
@@ -79,7 +79,7 @@ class MacOpHandler():
                         app_version = app.get('version', '')
                         app_date = app.get('lastModified', '')
 
-                        app_inst = CreateApplication.create(
+                        app_inst = AppUtils.create_app(
                             app_name,
                             app_version,
                             '',  # description
@@ -123,7 +123,7 @@ class MacOpHandler():
             if app.name == name:
                 return app
 
-        return CreateApplication.null_application()
+        return AppUtils.null_application()
 
     def _get_installed_apps(self, name_list):
         installed_apps = self.get_installed_applications()
@@ -176,7 +176,7 @@ class MacOpHandler():
                             app_version = app.get('displayVersion', '')
                             app_date = app.get('date', '')
 
-                            app_inst = CreateApplication.create(
+                            app_inst = AppUtils.create_app(
                                 app_name,
                                 app_version,
                                 '',  # description
@@ -271,7 +271,7 @@ class MacOpHandler():
 
                 dependencies = []
 
-                app_inst = CreateApplication.create(
+                app_inst = AppUtils.create_app(
                     app_name,
                     app_dict['version'],
                     description,
@@ -360,11 +360,13 @@ class MacOpHandler():
 
         apps_to_delete = []
         for app in difference:
-            root = {}
-            root['name'] = app.name
-            root['version'] = app.version
+            app_delete_dict = {
+                'name': app.name,
+                'version': app.version,
+                'app_id': AppUtils.generate_app_id(app.name, app.version)
+            }
 
-            apps_to_delete.append(root)
+            apps_to_delete.append(app_delete_dict)
 
         return apps_to_delete
 
@@ -418,7 +420,7 @@ class MacOpHandler():
         success = 'false'
         error = RvError.UpdatesNotFound
         restart = 'false'
-        app_encoding = CreateApplication.null_application().to_dict()
+        app_encoding = AppUtils.null_application().to_dict()
         apps_to_delete = []
         apps_to_add = []
 
@@ -652,7 +654,7 @@ class MacOpHandler():
 
                 continue
 
-            app_inst = CreateApplication.create(
+            app_inst = AppUtils.create_app(
                 info_dict['name'],
                 info_dict['version'],
                 '',  # description

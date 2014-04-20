@@ -1,6 +1,10 @@
 import datetime
+import hashlib
 
 from src.utils import settings
+
+
+class AppUtils():
 
 
 class Application():
@@ -79,13 +83,13 @@ class Application():
         return app_dict
 
 
-class CreateApplication():
+class AppUtils():
 
     @staticmethod
-    def create(name, version, description, file_data, dependencies,
-               support_url, vendor_severity, file_size, vendor_id,
-               vendor_name, install_date, release_date,
-               installed, repo, reboot_required, uninstallable):
+    def create_app(name, version, description, file_data, dependencies,
+                   support_url, vendor_severity, file_size, vendor_id,
+                   vendor_name, install_date, release_date,
+                   installed, repo, reboot_required, uninstallable):
 
         """ Creates a new Application instance based on the parameters. """
         application = Application()
@@ -101,10 +105,10 @@ class CreateApplication():
         application.vendor_id = vendor_id
         application.vendor_name = vendor_name
         application.install_date = \
-            CreateApplication._get_date_for_app(install_date)
+            AppUtils._get_date_for_app(install_date)
         application.release_date = \
-            CreateApplication._get_date_for_app(release_date)
-        application.status = CreateApplication.set_installed(installed)
+            AppUtils._get_date_for_app(release_date)
+        application.status = AppUtils.set_installed(installed)
         application.repo = repo
         application.reboot_required = reboot_required
         application.uninstallable = uninstallable
@@ -114,6 +118,10 @@ class CreateApplication():
     @staticmethod
     def null_application():
         return Application()
+
+    @staticmethod
+    def generate_app_id(self, name, version):
+        return hashlib.sha256("{0}{1}".format(name, version)).hexdigest()
 
     @staticmethod
     def set_installed(installed):

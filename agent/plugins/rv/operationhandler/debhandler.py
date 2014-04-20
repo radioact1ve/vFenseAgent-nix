@@ -6,7 +6,7 @@ import hashlib
 
 from src.utils import settings, logger, utilcmds, updater
 from datetime import datetime
-from rv.data.application import CreateApplication
+from rv.data.application import AppUtils
 from rv.rvsofoperation import RvError, InstallResult, UninstallResult, \
     CpuPriority
 
@@ -216,7 +216,7 @@ class DebianHandler():
                 package_dictionary.get(PkgDictValues.description_en, '')
 
         application = \
-            CreateApplication.create(
+            AppUtils.create_app(
                 app_name,
                 package_dictionary.get(PkgDictValues.version, ''),
                 description,
@@ -580,7 +580,7 @@ class DebianHandler():
         pkg_dict = installed_packages.get(name, {})
 
         if not pkg_dict:
-            return CreateApplication.null_application()
+            return AppUtils.null_application()
 
         return self._create_app_from_dict(pkg_dict)
 
@@ -710,11 +710,13 @@ class DebianHandler():
 
         apps_to_delete = []
         for app in difference:
-            root = {}
-            root['name'] = app.name
-            root['version'] = app.version
+            app_delete_dict = {
+                'name': app.name,
+                'version': app.version,
+                'app_id': AppUtils.generate_app_id(app.name, app.version)
+            }
 
-            apps_to_delete.append(root)
+            apps_to_delete.append(app_delete_dict)
 
         return apps_to_delete
 
@@ -751,7 +753,7 @@ class DebianHandler():
         success = 'false'
         error = RvError.UpdatesNotFound
         restart = 'false'
-        app_encoding = CreateApplication.null_application().to_dict()
+        app_encoding = AppUtils.null_application().to_dict()
         apps_to_delete = []
         apps_to_add = []
 

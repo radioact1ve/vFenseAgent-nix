@@ -5,7 +5,7 @@ import glob
 import json
 
 from agentplugin import AgentPlugin
-from rv.data.application import CreateApplication
+from rv.data.application import AppUtils
 from src.utils import RepeatTimer, settings, logger, systeminfo, uninstaller, \
     throd
 from serveroperation.sofoperation import SofOperation, OperationKey, \
@@ -190,7 +190,7 @@ class RvPlugin(AgentPlugin):
                 'false',  # success
                 'false',  # restart
                 error,  # error
-                CreateApplication.null_application().to_dict()  # app json
+                AppUtils.null_application().to_dict()  # app json
             )
 
             self._send_results(rvsof_result)
@@ -690,7 +690,7 @@ class RvPlugin(AgentPlugin):
 
     def get_agent_app(self):
         try:
-            agent_app = CreateApplication.create(
+            agent_app = AppUtils.create_app(
                 settings.AgentName,
                 settings.AgentVersion,
                 settings.AgentDescription,  # description
