@@ -495,13 +495,13 @@ class DebianHandler():
             dependencies = [dep for dep in dependencies if dep[0] != name]
 
             for dep in dependencies:
-                root = {}
-                root['name'] = dep[0]
-                root['version'] = dep[1]
-                root['app_id'] = \
-                    hashlib.sha256("{0}{1}".format(dep[0], dep[1])).hexdigest()
+                dep_dict = {
+                    'name': dep[0],
+                    'version': dep[1],
+                    'app_id': AppUtils.generate_app_id(dep[0], dep[1])
+                }
 
-                dep_list.append(root)
+                dep_list.append(dep_dict)
 
         return dep_list
 

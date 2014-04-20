@@ -186,9 +186,9 @@ class MacOpHandler():
                                 '',  # vendor_severity
                                 '',  # file_size
                                 # vendor_id
-                                hashlib.sha256(
-                                    app_name.encode('utf-8') + app_version)
-                                .hexdigest(),
+                                AppUtils.generate_app_id(
+                                    app_name.encode('utf-8') + app_version
+                                ),
                                 'Apple',  # vendor_name
                                 app_date,  # install_date
                                 None,  # release_date

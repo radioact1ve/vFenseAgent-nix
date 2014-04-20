@@ -391,12 +391,11 @@ class RpmOpHandler():
             if dep.release:
                 version = '{0}-{1}'.format(version, dep.release)
 
-            dep_dict = {}
-            dep_dict['name'] = dep.name
-            dep_dict['version'] = version
-            dep_dict['app_id'] = hashlib.sha256("{0}{1}".format(
-                dep.name, dep.version)
-            ).hexdigest()
+            dep_dict = {
+                'name': dep.name,
+                'version': version,
+                'app_id': AppUtils.generate_app_id(dep.name, dep.version)
+            }
 
             # TODO: find a solution. Getting duplicates of package
             # just different architecture. Should we only be listing one?
