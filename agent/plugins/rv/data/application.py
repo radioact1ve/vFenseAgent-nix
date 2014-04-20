@@ -117,7 +117,7 @@ class AppUtils():
         return Application()
 
     @staticmethod
-    def generate_app_id(self, name, version):
+    def generate_app_id(name, version):
         return hashlib.sha256("{0}{1}".format(name, version)).hexdigest()
 
     @staticmethod
