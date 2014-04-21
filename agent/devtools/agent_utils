@@ -83,6 +83,23 @@ default_options = {'agentid': '',
                    'loglevel': 'debug',
                    'uninstall_path': '/opt/TopPatch/'}
 
+optional_dependencies = {
+    'deb': [
+        ['apt-get', 'install', 'update-notifier-common', '-y'],
+        ['apt-get', 'install', 'dmidecode', '-y']
+    ],
+    'rpm': [
+        ['yum', 'install', 'dmidecode', '-y']
+    ],
+    'mac': []
+}
+
+required_dependencies = {
+    'deb': [],
+    'rpm': [],
+    'mac': []
+}
+
 
 def run_command(cmd):
     proc = subprocess.Popen(
@@ -453,6 +470,25 @@ def check_user_input(args):
         printErrors([cred_err])
 
 
+def install_dependencies(args, platform):
+    global optional_dependencies
+    global required_dependencies
+
+    for dep in required_dependencies.get(platform, []):
+        _, err = run_command(dep)
+
+        if err:
+            raise Exception(err)
+
+    # TODO: check if user doesn't want to install optional dependencies
+    # with the args parameter.
+    for dep in optional_dependencies.get(platform, []):
+        _, err = run_command(dep)
+
+        if err:
+            raise Exception(err)
+
+
 class MacUtils:
     def __init__(self):
         self.system_daemon_path = '/Library/LaunchDaemons'
@@ -705,8 +741,11 @@ class RpmUtils:
         self.init_dir = '/etc/init.d/'
         self.chkconfig = '/sbin/chkconfig'
         self.service = '/sbin/service'
+        self.platform = 'rpm'
 
-        self.rpm_daemon = os.path.join('daemon', 'rpm', self.daemon_name)
+        self.rpm_daemon = os.path.join(
+            'daemon', self.platform, self.daemon_name
+        )
         self.system_daemon = os.path.join(self.init_dir, self.daemon_name)
 
     def _move_daemon_to_init(self, daemon_path):
@@ -788,22 +827,10 @@ class RpmUtils:
 
     def _check_for_running_agent(self):
         cmd = [self.service, self.daemon_name, 'status']
-        output, err = run_command(cmd)
+        _, err = run_command(cmd)
 
-        if "TopPatch Agent is running" not in err:
+        if 'TopPatch Agent is running' not in err:
             raise Exception(err)
-
-    def _install_dependencies(self, args):
-        optional_dependencies = {
-            'dmidecode': ['yum', 'install', 'dmidecode', '-y']
-        }
-
-        # TODO: check if user doesn't want to install dependencies
-        for dep in optional_dependencies.values():
-            result, err = run_command(dep)
-
-            if err:
-                raise Exception(err)
 
     def install(self, args):
         errors = []
@@ -811,7 +838,7 @@ class RpmUtils:
         check_user_input(args)
 
         try:
-            self._install_dependencies(args)
+            install_dependencies(args, self.platform)
 
             self._clean_up()
             create_necessary_dirs()
@@ -1008,8 +1035,11 @@ class DebUtils:
         self.init_dir = '/etc/init.d/'
         self.service = '/usr/sbin/service'
         self.update_rc = '/usr/sbin/update-rc.d'
+        self.platform = 'deb'
 
-        self.deb_daemon = os.path.join('daemon', 'deb', self.daemon_name)
+        self.deb_daemon = os.path.join(
+            'daemon', self.platform, self.daemon_name
+        )
         self.system_daemon = os.path.join(self.init_dir, self.daemon_name)
 
     def _move_daemon_to_init(self, daemon_path):
@@ -1024,7 +1054,7 @@ class DebUtils:
         output, err = run_command(cmd)
         if err:
             if ("No such file or directory" in err or
-                "missing LSB tags" in err):
+               "missing LSB tags" in err):
                 pass
             else:
                 raise Exception(err)
@@ -1071,25 +1101,10 @@ class DebUtils:
 
     def _check_for_running_agent(self):
         cmd = [self.service, self.daemon_name, 'status']
-        result, err = run_command(cmd)
+        _, err = run_command(cmd)
 
         if 'TopPatch Agent is running' not in err:
             raise Exception(err)
-
-    def _install_dependencies(self, args):
-        optional_dependencies = {
-            'update-notifier-common':
-                ['apt-get', 'install', 'update-notifier-common', '-y'],
-            'dmidecode':
-                ['apt-get', 'install', 'dmidecode', '-y']
-        }
-
-        # TODO: check if user doesn't want to install dependencies
-        for dep in optional_dependencies.values():
-            result, err = run_command(dep)
-
-            if err:
-                raise Exception(err)
 
     def install(self, args):
         errors = []
@@ -1097,7 +1112,7 @@ class DebUtils:
         check_user_input(args)
 
         try:
-            self._install_dependencies(args)
+            install_dependencies(args, self.platform)
 
             self._clean_up()
             create_necessary_dirs()
