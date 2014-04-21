@@ -10,7 +10,7 @@ from src.utils import logger
 from src.utils.distro.mac import launchd
 from src.utils.distro.mac.plist import PlistInterface
 
-from rv.rvsofoperation import CpuPriority
+from patching.patchingsofoperation import CpuPriority
 
 
 class PkgInstaller():

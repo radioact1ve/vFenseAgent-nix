@@ -1,12 +1,12 @@
 """
-Module to manage everything and anything with RV supported third party
+Module to manage everything and anything with Patching supported third party
 applications. Fun!
 """
 import os
 import subprocess
 
 from src.utils import logger
-from rv.data.application import Application, AppUtils
+from patching.data.application import Application, AppUtils
 
 
 class ThirdPartyManager():

@@ -7,10 +7,10 @@ import subprocess
 from serveroperation.sofoperation import *
 from src.utils import logger, updater, utilcmds
 
-from rv.data.application import AppUtils
-from rv.rvsofoperation import InstallResult, UninstallResult, RvOperationKey
-from rv.distro.redhat import yum
-from rv.distro.redhat.yum.repos import RepoData, get_primary_file
+from patching.data.application import AppUtils
+from patching.patchingsofoperation import InstallResult, UninstallResult, PatchingOperationKey
+from patching.distro.redhat import yum
+from patching.distro.redhat.yum.repos import RepoData, get_primary_file
 
 
 class RpmOpHandler():
@@ -710,11 +710,11 @@ class RpmOpHandler():
             file_size = ''
 
         main = {
-            RvOperationKey.FileName: file_name,
-            RvOperationKey.FileUri: file_uri,
-            RvOperationKey.FileHash: main_package.hash,
-            RvOperationKey.FileSize: file_size,
-            #RvOperationKey.PackageType: 'primary'
+            PatchingOperationKey.FileName: file_name,
+            PatchingOperationKey.FileUri: file_uri,
+            PatchingOperationKey.FileHash: main_package.hash,
+            PatchingOperationKey.FileSize: file_size,
+            #PatchingOperationKey.PackageType: 'primary'
         }
 
         file_data.append(main)
@@ -744,11 +744,11 @@ class RpmOpHandler():
         #                    r = repo_data.get_repo(dep.repo)
 
         #                    f = {
-        #                        RvOperationKey.FileUri: os.path.join(
+        #                        PatchingOperationKey.FileUri: os.path.join(
         #                            r.url, mp.location
         #                        ),
-        #                        RvOperationKey.FileHash: main_package.hash,
-        #                        #RvOperationKey.PackageType: 'dependency'
+        #                        PatchingOperationKey.FileHash: main_package.hash,
+        #                        #PatchingOperationKey.PackageType: 'dependency'
         #                    }
 
         #                    dep_files.append(f)

@@ -13,11 +13,11 @@ import subprocess
 
 from src.utils import logger, settings, utilcmds
 
-from rv.distro.redhat import yum
-from rv.operationhandler.rpmhandler import RpmOpHandler
+from patching.distro.redhat import yum
+from patching.operationhandler.rpmhandler import RpmOpHandler
 
-from rv.data.application import AppUtils
-from rv.rvsofoperation import InstallResult, UninstallResult
+from patching.data.application import AppUtils
+from patching.patchingsofoperation import InstallResult, UninstallResult
 
 
 class PkgKeys():

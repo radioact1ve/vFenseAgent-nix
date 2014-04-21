@@ -6,8 +6,8 @@ import hashlib
 
 from src.utils import settings, logger, utilcmds, updater
 from datetime import datetime
-from rv.data.application import AppUtils
-from rv.rvsofoperation import RvError, InstallResult, UninstallResult, \
+from patching.data.application import AppUtils
+from patching.patchingsofoperation import PatchingError, InstallResult, UninstallResult, \
     CpuPriority
 
 
@@ -572,7 +572,7 @@ class DebianHandler():
         return apps
 
     def get_installed_updates(self):
-        """rvplugin calls this function, but only meant for Mac."""
+        """patchingplugin calls this function, but only meant for Mac."""
         return []
 
     def _get_installed_app(self, name):
@@ -751,7 +751,7 @@ class DebianHandler():
         old_install_list = self.get_installed_applications()
 
         success = 'false'
-        error = RvError.UpdatesNotFound
+        error = PatchingError.UpdatesNotFound
         restart = 'false'
         app_encoding = AppUtils.null_application().to_dict()
         apps_to_delete = []

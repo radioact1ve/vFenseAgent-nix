@@ -5,24 +5,26 @@ import glob
 import json
 
 from agentplugin import AgentPlugin
-from rv.data.application import AppUtils
+from patching.data.application import AppUtils
 from src.utils import RepeatTimer, settings, logger, systeminfo, uninstaller, \
     throd
 from serveroperation.sofoperation import SofOperation, OperationKey, \
     OperationValue
-from rvsofoperation import RvSofOperation, RvError, RvOperationValue, \
-    RvOperationKey, RvSofResult
+from patching.patchingsofoperation import PatchingSofOperation, \
+    PatchingError, PatchingOperationValue, PatchingOperationKey, \
+    PatchingSofResult
 
-import rvformatter
+import patchingformatter
 
 
-class RvPlugin(AgentPlugin):
+class PatchingPlugin(AgentPlugin):
 
+    # TODO: rename to patching
     Name = 'rv'
 
     def __init__(self):
 
-        self._name = RvPlugin.Name
+        self._name = PatchingPlugin.Name
         self._update_directory = settings.UpdatesDirectory
         self._operation_handler = self._get_op_handler()
         self.uninstaller = uninstaller.Uninstaller()
@@ -83,34 +85,34 @@ class RvPlugin(AgentPlugin):
     def run_operation(self, operation):
         """ Executes an operation given to it. """
 
-        if not isinstance(operation, RvSofOperation):
-            operation = RvSofOperation(operation.raw_operation)
+        if not isinstance(operation, PatchingSofOperation):
+            operation = PatchingSofOperation(operation.raw_operation)
 
         try:
 
             operation_methods = {
 
-                RvOperationValue.InstallUpdate:
+                PatchingOperationValue.InstallUpdate:
                     self._install_operation,
-                RvOperationValue.InstallSupportedApps:
+                PatchingOperationValue.InstallSupportedApps:
                     self._install_operation,
-                RvOperationValue.InstallCustomApps:
+                PatchingOperationValue.InstallCustomApps:
                     self._install_operation,
-                RvOperationValue.InstallAgentUpdate:
+                PatchingOperationValue.InstallAgentUpdate:
                     self._install_operation,
-                RvOperationValue.Uninstall:
+                PatchingOperationValue.Uninstall:
                     self._uninstall_operation,
-                RvOperationValue.UninstallAgent:
+                PatchingOperationValue.UninstallAgent:
                     self._uninstall_agent_operation,
-                RvOperationValue.UpdatesAvailable:
+                PatchingOperationValue.UpdatesAvailable:
                     self.available_updates_operation,
-                RvOperationValue.ApplicationsInstalled:
+                PatchingOperationValue.ApplicationsInstalled:
                     self.installed_applications_operation,
-                RvOperationValue.RefreshApps:
+                PatchingOperationValue.RefreshApps:
                     self.refresh_apps_operation,
-                RvOperationValue.AgentLogRetrieval:
+                PatchingOperationValue.AgentLogRetrieval:
                     self.retrieve_agent_log,
-                RvOperationValue.ExecuteCommand:
+                PatchingOperationValue.ExecuteCommand:
                     self.execute_command
 
             }
@@ -131,13 +133,13 @@ class RvPlugin(AgentPlugin):
     def _get_install_method(self, operation_type):
         installation_methods = {
 
-            RvOperationValue.InstallUpdate:
+            PatchingOperationValue.InstallUpdate:
                 self._operation_handler.install_update,
-            RvOperationValue.InstallSupportedApps:
+            PatchingOperationValue.InstallSupportedApps:
                 self._operation_handler.install_supported_apps,
-            RvOperationValue.InstallCustomApps:
+            PatchingOperationValue.InstallCustomApps:
                 self._operation_handler.install_custom_apps,
-            RvOperationValue.InstallAgentUpdate:
+            PatchingOperationValue.InstallAgentUpdate:
                 self._operation_handler.install_agent_update
 
         }
@@ -147,10 +149,10 @@ class RvPlugin(AgentPlugin):
     def _restart_if_needed(self, operation_restart, restart_needed):
         restart = False
 
-        if operation_restart == RvOperationValue.ForcedRestart:
+        if operation_restart == PatchingOperationValue.ForcedRestart:
             restart = True
 
-        elif (operation_restart == RvOperationValue.OptionalRestart and
+        elif (operation_restart == PatchingOperationValue.OptionalRestart and
               restart_needed):
             restart = True
 
@@ -176,12 +178,12 @@ class RvPlugin(AgentPlugin):
             failed_to_download = True
 
         if not operation.install_data_list or failed_to_download:
-            error = RvError.UpdatesNotFound
+            error = PatchingError.UpdatesNotFound
 
             if failed_to_download:
                 error = 'Failed to download packages.'
 
-            rvsof_result = RvSofResult(
+            patchingsof_result = PatchingSofResult(
                 operation.id,
                 operation.type,
                 '',  # app id
@@ -193,15 +195,12 @@ class RvPlugin(AgentPlugin):
                 AppUtils.null_application().to_dict()  # app json
             )
 
-            self._send_results(rvsof_result)
+            self._send_results(patchingsof_result)
 
         else:
 
-            if operation.type == RvOperationValue.InstallAgentUpdate:
+            if operation.type == PatchingOperationValue.InstallAgentUpdate:
                 self._agent_update(operation, update_dir)
-            # TODO(urgent): remove this, only for testing
-            #elif operation.type == RvOperationValue.InstallCustomApps:
-            #    self._agent_update(operation, update_dir)
             else:
                 self._regular_update(operation, update_dir)
 
@@ -217,7 +216,7 @@ class RvPlugin(AgentPlugin):
             if install_result.restart == 'true':
                 restart_needed = True
 
-            rvsof_result = RvSofResult(
+            patchingsof_result = PatchingSofResult(
                 operation.id,
                 operation.type,
                 install_data.id,  # app id
@@ -229,11 +228,7 @@ class RvPlugin(AgentPlugin):
                 install_result.app_json  # app json
             )
 
-            # TODO(urgent): always leave commented out, or remove
-            #loaded = json.loads(rvsof_result.raw_result)
-            #print json.dumps(loaded, indent=4)
-
-            self._send_results(rvsof_result)
+            self._send_results(patchingsof_result)
 
         # TODO(urgent): should I call a handlers cleaning method from here?
 
@@ -259,7 +254,7 @@ class RvPlugin(AgentPlugin):
             if install_result.restart == 'true':
                 restart_needed = True
 
-            rvsof_result = RvSofResult(
+            patchingsof_result = PatchingSofResult(
                 operation.id,
                 operation.type,
                 install_data.id,  # app id
@@ -271,8 +266,8 @@ class RvPlugin(AgentPlugin):
                 install_result.app_json  # app json
             )
 
-            if rvsof_result.success != '':
-                self._send_results(rvsof_result)
+            if patchingsof_result.success != '':
+                self._send_results(patchingsof_result)
 
         #if os.path.isdir(self._update_directory):
         #    shutil.rmtree(self._update_directory)
@@ -335,7 +330,7 @@ class RvPlugin(AgentPlugin):
         if not operation.uninstall_data_list:
             error = "No applications specified to uninstall."
 
-            rvsof_result = RvSofResult(
+            patchingsof_result = PatchingSofResult(
                 operation.id,
                 operation.type,
                 '',  # app id
@@ -347,19 +342,21 @@ class RvPlugin(AgentPlugin):
                 []  # data
             )
 
-            self._send_results(rvsof_result)
+            self._send_results(patchingsof_result)
 
         else:
 
             for uninstall_data in operation.uninstall_data_list:
 
                 uninstall_result = \
-                    self._operation_handler.uninstall_application(uninstall_data)
+                    self._operation_handler.uninstall_application(
+                        uninstall_data
+                    )
 
                 if uninstall_result.restart == 'true':
                     restart_needed = True
 
-                rvsof_result = RvSofResult(
+                patchingsof_result = PatchingSofResult(
                     operation.id,
                     operation.type,
                     uninstall_data.id,  # app id
@@ -371,7 +368,7 @@ class RvPlugin(AgentPlugin):
                     []  # data
                 )
 
-                self._send_results(rvsof_result)
+                self._send_results(patchingsof_result)
 
         logger.info('Done uninstalling applications.')
 
@@ -401,9 +398,9 @@ class RvPlugin(AgentPlugin):
                 success = update_result['success']
                 error = update_result.get('error', '')
 
-                rvsof_result = RvSofResult(
+                patchingsof_result = PatchingSofResult(
                     operation_id,
-                    RvOperationValue.InstallAgentUpdate,
+                    PatchingOperationValue.InstallAgentUpdate,
                     app_id,  # app id
                     [],  # apps_to_delete
                     [],  # apps_to_add
@@ -413,9 +410,9 @@ class RvPlugin(AgentPlugin):
                     "{}"  # app json
                 )
 
-                logger.info(rvsof_result.__dict__)
+                logger.info(patchingsof_result.__dict__)
 
-                self._send_results(rvsof_result)
+                self._send_results(patchingsof_result)
 
                 os.remove(settings.update_file)
 
@@ -477,9 +474,6 @@ class RvPlugin(AgentPlugin):
         @return: Nothing
         """
 
-        # self._sqlite.recreate_application_table()
-        self._operation_handler.recreate_tables()
-
         self._operation_handler.get_available_updates()
         self._operation_handler.get_installed_updates()
         self._operation_handler.get_installed_applications()
@@ -492,8 +486,8 @@ class RvPlugin(AgentPlugin):
         Returns:
             (bool) - Successful download.
         """
-        file_uris = uri[RvOperationKey.FileUris]
-        file_size = uri[RvOperationKey.FileSize]
+        file_uris = uri[PatchingOperationKey.FileUris]
+        file_size = uri[PatchingOperationKey.FileSize]
 
         # Loop through each possible uri for the package
         for file_uri in file_uris:
@@ -554,7 +548,9 @@ class RvPlugin(AgentPlugin):
                 # Loop through the individual packages that make up the app
                 for uri in install_data.uris:
                     logger.debug(
-                        "File uris: {0}".format(uri[RvOperationKey.FileUris])
+                        "File uris: {0}".format(
+                            uri[PatchingOperationKey.FileUris]
+                        )
                     )
 
                     dl_success = self._download_file(
@@ -634,7 +630,7 @@ class RvPlugin(AgentPlugin):
 
     def available_updates_operation(self, operation):
         operation.applications = self.get_available_updates()
-        operation.raw_result = rvformatter.applications(operation)
+        operation.raw_result = patchingformatter.applications(operation)
 
         return operation
 
@@ -647,7 +643,7 @@ class RvPlugin(AgentPlugin):
 
     def installed_applications_operation(self, operation):
         operation.applications = self.get_applications_installed()
-        operation.raw_result = rvformatter.applications(operation)
+        operation.raw_result = patchingformatter.applications(operation)
 
         return operation
 
@@ -739,8 +735,8 @@ class RvPlugin(AgentPlugin):
 
         """
 
-        operation = RvSofOperation()
-        operation.type = RvOperationValue.RefreshApps
+        operation = PatchingSofOperation()
+        operation.type = PatchingOperationValue.RefreshApps
 
         self._register_operation(operation)
 
