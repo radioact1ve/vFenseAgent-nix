@@ -7,7 +7,7 @@ class Uninstaller():
 
     def uninstall(self):
         try:
-            cmd = ['/opt/TopPatch/agent/agent_utils', '--uninstall']
+            cmd = ['/opt/vFense/agent/agent_utils', '--uninstall']
 
             self.utilcmds.run_command_separate_group(cmd)
 

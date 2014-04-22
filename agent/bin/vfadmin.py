@@ -7,7 +7,7 @@ import argparse
 
 _system = platform.system().lower()
 
-_mac_plist_path = '/System/Library/LaunchDaemons/com.toppatch.agent.plist'
+_mac_plist_path = '/System/Library/LaunchDaemons/com.vfense.agent.plist'
 
 
 def _process_cmd(cmd):
@@ -81,7 +81,7 @@ def restart_agent():
 
     if _system == 'darwin':
 
-        cmd = ['launchctl', 'stop', 'com.toppatch.agent']
+        cmd = ['launchctl', 'stop', 'com.vfense.agent']
         output, error = _process_cmd(cmd)
 
     if output:
@@ -144,7 +144,7 @@ if __name__== "__main__":
 
 
     parser = argparse.ArgumentParser(
-        description="Admin tool for the TopPatch Agent. Must be run as root."
+        description="Admin tool for the vFense Agent. Must be run as root."
     )
     parser.add_argument(
         '-start',

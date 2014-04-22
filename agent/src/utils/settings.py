@@ -35,7 +35,7 @@ _db_filename = 'agent.adb'
 _server_crt_file = 'server.crt'
 
 starting_directory = os.getcwd()
-AgentDirectory = starting_directory  # '/opt/TopPatch/agent'
+AgentDirectory = starting_directory  # '/opt/vFense/agent'
 BinDirectory = os.path.join(AgentDirectory, 'bin')
 DbDirectory = os.path.join(AgentDirectory, 'db')
 AgentDb = os.path.join(DbDirectory, _db_filename)
@@ -79,7 +79,7 @@ def _get_server_addresses():
         )
         logger.critical(
             "Please edit agent.config "
-            "(in the TopPatch/agent directory) to correct it."
+            "(in the vFense/agent directory) to correct it."
         )
 
         sys.exit(1)

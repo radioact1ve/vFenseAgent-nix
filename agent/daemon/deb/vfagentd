@@ -1,19 +1,19 @@
 #! /bin/sh
 
 ### BEGIN INIT INFO
-# Provides: tpagentd
+# Provides: vfagentd
 # Required-Start: $remote_fs $syslog
 # Required-Stop: $remote_fs $syslog
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: TopPatch Agent
-# Description: Provides communication between the TopPatch agent and the TopPatch Server.
+# Short-Description: vFense Agent
+# Description: Provides communication between the vFense agent and the vFense Server.
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-NAME=tpagentd
-DESC="TopPatch Agent"
-DAEMON=/opt/TopPatch/agent/daemon/agentd.py
+NAME=vfagentd
+DESC="vFense Agent"
+DAEMON=/opt/vFense/agent/daemon/agentd.py
 
 set -e
 

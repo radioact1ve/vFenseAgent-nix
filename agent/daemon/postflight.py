@@ -7,10 +7,10 @@ import subprocess
 
 
 system_daemon_dir = '/System/Library/LaunchDaemons/'
-agent_daemon_dir = '/opt/TopPatch/agent/daemon/'
+agent_daemon_dir = '/opt/vFense/agent/daemon/'
 
-agent_plist_filename = 'com.toppatch.agent.plist'
-watcher_plist_filename = 'com.toppatch.watcher.plist'
+agent_plist_filename = 'com.vfense.agent.plist'
+watcher_plist_filename = 'com.vfense.watcher.plist'
 
 agent_plist_path = os.path.join(agent_daemon_dir, agent_plist_filename)
 watcher_plist_path = os.path.join(agent_daemon_dir, watcher_plist_filename)

@@ -3,14 +3,14 @@
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>com.toppatch.watcher</string>
+    <string>com.vfense.watcher</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/TopPatch/agent/bin/python</string>
-        <string>/opt/TopPatch/agent/watcher_mac.py</string>
+        <string>/opt/vFense/agent/bin/python</string>
+        <string>/opt/vFense/agent/watcher_mac.py</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/opt/TopPatch/agent</string>
+    <string>/opt/vFense/agent</string>
     <key>KeepAlive</key>
     <true/>
   </dict>
