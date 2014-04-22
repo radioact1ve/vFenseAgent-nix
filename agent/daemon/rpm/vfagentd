@@ -1,0 +1,38 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides: vfagentd
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: The vFense Agent
+# Description: Provides communication between this agent and the vFense Server.
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME=vfagentd
+DESC="vFense Agent"
+DAEMON=/opt/vFense/agent/daemon/agentd.py
+
+set -e
+
+case "$1" in
+  start)
+	/opt/vFense/agent/bin/python $DAEMON start
+        ;;
+  stop)
+	/opt/vFense/agent/bin/python $DAEMON stop
+	;;
+  restart)
+	/opt/vFense/agent/bin/python $DAEMON restart
+	;;
+  status)
+	/opt/vFense/agent/bin/python $DAEMON status
+	;;
+  *)
+    N=/etc/init.d/$NAME
+    echo "Usage: $N {start|stop|restart|status}" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

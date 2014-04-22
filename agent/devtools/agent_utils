@@ -20,15 +20,15 @@ OPT_DIR = '/opt'
 AGENT_DIR = 'agent'
 UPDATE_FILE = '.agent_update'
 
-TOPPATCH_DIR = os.path.join(OPT_DIR, 'TopPatch')
-AGENT_INSTALL_PATH = os.path.join(TOPPATCH_DIR, AGENT_DIR)
+VFENSE_DIR = os.path.join(OPT_DIR, 'vFense')
+AGENT_INSTALL_PATH = os.path.join(VFENSE_DIR, AGENT_DIR)
 AGENT_CONFIG = os.path.join(AGENT_INSTALL_PATH, 'agent.config')
-UPDATE_LOG = os.path.join(TOPPATCH_DIR, 'tmp', 'TopPatchAgentUpdate.log')
-INSTALL_LOG = os.path.join(TOPPATCH_DIR, 'agent_install_failure.log')
+UPDATE_LOG = os.path.join(VFENSE_DIR, 'tmp', 'vFenseAgentUpdate.log')
+INSTALL_LOG = os.path.join(VFENSE_DIR, 'agent_install_failure.log')
 
 UNINSTALL_LOG = '/var/log/tpagent_uninstall.log'
 
-AGENT_TMP_LOCATION = os.path.join(TOPPATCH_DIR, 'tmp', AGENT_DIR)
+AGENT_TMP_LOCATION = os.path.join(VFENSE_DIR, 'tmp', AGENT_DIR)
 
 PYTHON_BIN_EXE = os.path.join(AGENT_INSTALL_PATH, 'bin', 'python')
 
@@ -81,7 +81,7 @@ default_options = {'agentid': '',
                    'starterport': '9005',
                    'tunnelport': '22',
                    'loglevel': 'debug',
-                   'uninstall_path': '/opt/TopPatch/'}
+                   'uninstall_path': '/opt/vFense/'}
 
 optional_dependencies = {
     'deb': [
@@ -114,8 +114,8 @@ def create_necessary_dirs():
     if not os.path.exists(OPT_DIR):
         os.makedirs(OPT_DIR)
 
-    if not os.path.exists(TOPPATCH_DIR):
-        os.makedirs(TOPPATCH_DIR)
+    if not os.path.exists(VFENSE_DIR):
+        os.makedirs(VFENSE_DIR)
 
 
 def write_log(file_path, error):
@@ -492,7 +492,7 @@ def install_dependencies(args, platform):
 class MacUtils:
     def __init__(self):
         self.system_daemon_path = '/Library/LaunchDaemons'
-        self.daemon_plist_name = 'com.toppatch.agent.plist'
+        self.daemon_plist_name = 'com.vfense.agent.plist'
         self.system_plist = os.path.join(
             self.system_daemon_path, self.daemon_plist_name
         )
@@ -829,7 +829,7 @@ class RpmUtils:
         cmd = [self.service, self.daemon_name, 'status']
         _, err = run_command(cmd)
 
-        if 'TopPatch Agent is running' not in err:
+        if 'vFense Agent is running' not in err:
             raise Exception(err)
 
     def install(self, args):
@@ -873,7 +873,7 @@ class RpmUtils:
             print "Attempting to start agent."
             self._start_agent()
             self._check_for_running_agent()
-            print "TopPatch Agent is running."
+            print "vFense Agent is running."
 
         except Exception, e:
             write_install_log(e)
@@ -959,7 +959,7 @@ class RpmUtils:
             write_update_log("Attempting to start agent.")
             self._start_agent()
             self._check_for_running_agent()
-            write_update_log("TopPatch Agent is running.")
+            write_update_log("vFense Agent is running.")
 
             # TODO: Improve the message passing between old and new agent.
             # Passing appid and operationid as arguments doesn't seem right.
@@ -1103,7 +1103,7 @@ class DebUtils:
         cmd = [self.service, self.daemon_name, 'status']
         _, err = run_command(cmd)
 
-        if 'TopPatch Agent is running' not in err:
+        if 'vFense Agent is running' not in err:
             raise Exception(err)
 
     def install(self, args):
@@ -1142,7 +1142,7 @@ class DebUtils:
             print "Attempting to start agent."
             self._start_agent()
             self._check_for_running_agent()
-            print "TopPatch Agent is running."
+            print "vFense Agent is running."
 
         except Exception, e:
             write_install_log(e)
@@ -1223,7 +1223,7 @@ class DebUtils:
             write_update_log("Attempting to start agent.")
             self._start_agent()
             self._check_for_running_agent()
-            write_update_log("TopPatch Agent is running.")
+            write_update_log("vFense Agent is running.")
 
             # TODO: Improve the message passing between old and new agent.
             # Passing appid and operationid as arguments doesn't seem right.
@@ -1379,7 +1379,7 @@ def uninstall_op_callback(option, opt, value, parser):
     else:
         parser.values.uninstall_path = default_options['uninstall_path']
 
-        if os.path.exists(os.path.join(TOPPATCH_DIR, 'tp', 'src')):
+        if os.path.exists(os.path.join(VFENSE_DIR, 'tp', 'src')):
             # The agent is living alongside the server, only delete the agent
             parser.values.uninstall_path += AGENT_DIR
 

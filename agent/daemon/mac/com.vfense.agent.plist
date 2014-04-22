@@ -3,14 +3,14 @@
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>com.toppatch.agent</string>
+    <string>com.vfense.agent</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/TopPatch/agent/bin/python</string>
-        <string>/opt/TopPatch/agent/agent.py</string>
+        <string>/opt/vFense/agent/bin/python</string>
+        <string>/opt/vFense/agent/agent.py</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/opt/TopPatch/agent</string>
+    <string>/opt/vFense/agent</string>
     <key>KeepAlive</key>
     <true/>
   </dict>

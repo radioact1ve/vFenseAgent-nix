@@ -5,9 +5,9 @@ import time
 import signal
 import subprocess
 
-PIDFILE = '/tmp/toppatch_watcher.pid'
-PATH='/opt/TopPatch/agent/'
-TOPPATCHWATCHER = 'watcher.py'
+PIDFILE = '/tmp/vfense_watcher.pid'
+PATH='/opt/vFense/agent/'
+VFENSEWATCHER = 'watcher.py'
 PROGRAM = 'python'
 
 # Return codes
@@ -59,25 +59,25 @@ def start():
                 if pid:
                     count += 1
             if count == len(pid_no):
-                message = "TopPatch Starter is already running. Pid: %s(%s)\n" %\
+                message = "vFense Starter is already running. Pid: %s(%s)\n" %\
                           (pids, PIDFILE)
 
                 sys.stderr.write(message)
                 sys.exit(AGENT_ALREADY_RUNNING)
     else:
         os.chdir(PATH)
-        pid = run(PROGRAM, TOPPATCHWATCHER)
+        pid = run(PROGRAM, VFENSEWATCHER)
         pids.append(pid)
         time.sleep(1)
         file(PIDFILE, 'w+').write("%s\n" % pids)
         signal.signal(signal.SIGINT, handler)
         time.sleep(5)
-        print 'TopPatch Starter is running.'
+        print 'vFense Starter is running.'
 
 
 def stop():
     if not os.path.isfile(PIDFILE):
-        message = "TopPatch Starter is not running.\n"
+        message = "vFense Starter is not running.\n"
         sys.stderr.write(message)
         sys.exit(AGENT_ALREADY_STOPPED)
 
@@ -95,7 +95,7 @@ def stop():
             time.sleep(2)
             os.remove(PIDFILE)
 
-            print 'TopPatch Starter has been stopped.'
+            print 'vFense Starter has been stopped.'
 
         except OSError as e:
             print 'PID exist but now process. Removing.'
@@ -116,12 +116,12 @@ def restart():
 
 def status():
     if os.path.isfile(PIDFILE):
-        message = "TopPatch Starter is running. PIDFILE: '%s'\n"
+        message = "vFense Starter is running. PIDFILE: '%s'\n"
         sys.stderr.write(message % PIDFILE)
         # logger.info(message % PIDFILE)
         sys.exit(AGENT_ALREADY_RUNNING)
     else:
-        print "TopPatch Starter is not running."
+        print "vFense Starter is not running."
         sys.exit(AGENT_ALREADY_STOPPED)
 
 ACTION = sys.argv[1]
