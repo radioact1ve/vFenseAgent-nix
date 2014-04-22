@@ -19,8 +19,8 @@ class Updater():
         if not self.current_agent_path:
             file_path = os.path.abspath(__file__)
 
-            if '/opt/TopPatch/agent' in file_path:
-                self.current_agent_path = '/opt/TopPatch/agent'
+            if '/opt/vFense/agent' in file_path:
+                self.current_agent_path = '/opt/vFense/agent'
             else:
                 self.current_agent_path = None
                 logger.error("Could not find Application's path.")

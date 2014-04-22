@@ -163,7 +163,7 @@ def create_reverse_tunnel(local_port, host_port, server=None, ssh_port=None):
                         host_port,
                         local_port
                     ),
-                    'toppatch@%s' % server,
+                    'vfense@%s' % server,
                     '-p %s' % ssh_port
                 ],
                 stdout=dev_null,
