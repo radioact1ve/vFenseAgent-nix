@@ -24,7 +24,8 @@ class OperationManager():
         self._operation_queue = queuesave.load_operation_queue()
         self._result_queue = queuesave.load_result_queue()
 
-        self._operation_queue_thread = Thread(target=self._operation_queue_loop)
+        self._operation_queue_thread = \
+            Thread(target=self._operation_queue_loop)
         self._operation_queue_thread.daemon = True
         self._operation_queue_thread.start()
 
@@ -32,9 +33,8 @@ class OperationManager():
         self._result_queue_thread.daemon = True
         self._result_queue_thread.start()
 
+        # Callback function for results set by core
         self._send_results = None
-
-        self._uptime_file = os.path.join(settings.EtcDirectory, '.last_uptime')
 
     def _load_plugin_handlers(self):
         for plugin in self._plugins.values():
@@ -120,7 +120,7 @@ class OperationManager():
 
         except Exception as e:
             logger.error(
-                    "Failed to convert str to operation: {0}".format(operation)
+                "Failed to convert str to operation: {0}".format(operation)
             )
             logger.exception(e)
             self._major_failure(operation, e)
@@ -643,10 +643,10 @@ class OperationManager():
 
         uptime = systeminfo.uptime()
 
-        if os.path.exists(self._uptime_file):
-            os.remove(self._uptime_file)
+        if os.path.exists(settings.uptime_file):
+            os.remove(settings.uptime_file)
 
-        with open(self._uptime_file, 'w') as f:
+        with open(settings.uptime_file, 'w') as f:
             f.write(str(uptime))
 
     def _is_boot_up(self):
@@ -656,9 +656,9 @@ class OperationManager():
         boot_up = 'no'
 
         try:
-            if os.path.exists(self._uptime_file):
+            if os.path.exists(settings.uptime_file):
 
-                with open(self._uptime_file, 'r') as f:
+                with open(settings.uptime_file, 'r') as f:
                     file_uptime = f.read()
 
                     if current_uptime < float(file_uptime):
