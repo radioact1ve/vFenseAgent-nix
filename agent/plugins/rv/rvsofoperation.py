@@ -217,7 +217,9 @@ class RvSofOperation(SofOperation):
 
         # TODO: Fix hack. Lazy to use rvplugin module because of circular deps.
         self.plugin = 'rv'
-        self.cpu_priority = self._get_cpu_priority()
+
+        if self.json_message:
+            self.cpu_priority = self._get_cpu_priority()
 
         if self.type in RvOperationValue.InstallOperations:
 
