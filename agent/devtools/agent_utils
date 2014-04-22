@@ -26,7 +26,7 @@ AGENT_CONFIG = os.path.join(AGENT_INSTALL_PATH, 'agent.config')
 UPDATE_LOG = os.path.join(VFENSE_DIR, 'tmp', 'vFenseAgentUpdate.log')
 INSTALL_LOG = os.path.join(VFENSE_DIR, 'agent_install_failure.log')
 
-UNINSTALL_LOG = '/var/log/tpagent_uninstall.log'
+UNINSTALL_LOG = '/var/log/vfagent_uninstall.log'
 
 AGENT_TMP_LOCATION = os.path.join(VFENSE_DIR, 'tmp', AGENT_DIR)
 
@@ -737,7 +737,7 @@ class MacUtils:
 
 class RpmUtils:
     def __init__(self):
-        self.daemon_name = 'tpagentd'
+        self.daemon_name = 'vfagentd'
         self.init_dir = '/etc/init.d/'
         self.chkconfig = '/sbin/chkconfig'
         self.service = '/sbin/service'
@@ -1031,7 +1031,7 @@ class RpmUtils:
 
 class DebUtils:
     def __init__(self):
-        self.daemon_name = 'tpagentd'
+        self.daemon_name = 'vfagentd'
         self.init_dir = '/etc/init.d/'
         self.service = '/usr/sbin/service'
         self.update_rc = '/usr/sbin/update-rc.d'
