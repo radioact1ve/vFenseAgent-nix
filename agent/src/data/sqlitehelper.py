@@ -4,7 +4,7 @@ from data.update import Update
 from src.utils import logger
 
 
-_db_file_path = '/opt/TopPatch/agent/db/agentdb.tpdb'
+_db_file_path = '/opt/vFense/agent/db/agentdb.tpdb'
 _connection = None
 _packages_table = 'packages'
 
@@ -34,7 +34,7 @@ def _create_packages_table():
                            description TEXT,
                            support_url TEXT,
                            severity TEXT,
-                           toppatch_id TEXT UNIQUE,
+                           vfense_id TEXT UNIQUE,
                            vendor_id TEXT,
                            date_installed TEXT,
                            date_published TEXT,
@@ -82,27 +82,27 @@ def save_package(package):
                   package.description,
                   package.support_url,
                   package.severity,
-                  package.toppatch_id,
+                  package.vfense_id,
                   package.vendor_id,
                   package.date_installed,
                   package.date_published,
                   package.is_update,
                   package.package_url)
 
-        logger.debug("Adding TPID# %s" % package.toppatch_id)
+        logger.debug("Adding TPID# %s" % package.vfense_id)
         cursor.execute("INSERT INTO %s (name, version_release, description,"
-                       "support_url, severity, toppatch_id, vendor_id,"
+                       "support_url, severity, vfense_id, vendor_id,"
                        "date_installed, date_published, is_update, package_url)"
                        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" %
                        _packages_table,
                        values)
 
 
-def is_toppatch_id_unique(id):
+def is_vfense_id_unique(id):
 
     with _connection:
         cursor = _connection.cursor()
-        select_sql = "SELECT * FROM %s WHERE toppatch_id='%s' LIMIT 1" \
+        select_sql = "SELECT * FROM %s WHERE vfense_id='%s' LIMIT 1" \
                      % (_packages_table, id)
 
         cursor.execute(select_sql)
@@ -119,7 +119,7 @@ def get_package_by_id(id):
 
     with _connection:
         cursor = _connection.cursor()
-        select_sql = "SELECT * FROM %s WHERE toppatch_id='%s' LIMIT 1" \
+        select_sql = "SELECT * FROM %s WHERE vfense_id='%s' LIMIT 1" \
                      % (_packages_table, id)
 
         cursor.execute(select_sql)
@@ -160,7 +160,7 @@ def _get_package_from_row(row):
     update.support_url = row['support_url']
     update.severity = row['severity']
 
-    update.toppatch_id = row['toppatch_id']
+    update.vfense_id = row['vfense_id']
     update.vendor_id = row['vendor_id']
 
     update.date_installed = row['date_installed']

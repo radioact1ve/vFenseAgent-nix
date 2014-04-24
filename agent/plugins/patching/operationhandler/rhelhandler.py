@@ -13,11 +13,11 @@ import subprocess
 
 from src.utils import logger, settings, utilcmds
 
-from rv.distro.redhat import yum
-from rv.operationhandler.rpmhandler import RpmOpHandler
+from patching.distro.redhat import yum
+from patching.operationhandler.rpmhandler import RpmOpHandler
 
-from rv.data.application import CreateApplication
-from rv.rvsofoperation import InstallResult, UninstallResult
+from patching.data.application import AppUtils
+from patching.patchingsofoperation import InstallResult, UninstallResult
 
 
 class PkgKeys():
@@ -311,7 +311,7 @@ class RhelOpHandler(RpmOpHandler):
                     vendor_severity = \
                         severity_of_pkgs.get(lookup_name, '')
 
-                    app = CreateApplication.create(
+                    app = AppUtils.create_app(
                         app_name,
                         pkg[PkgKeys.full_version],
                         pkg[PkgKeys.description],  # description
@@ -361,7 +361,7 @@ class RhelOpHandler(RpmOpHandler):
         success = 'false'
         error = ''
         restart = 'false'
-        app_encoding = CreateApplication.null_application().to_dict()
+        app_encoding = AppUtils.null_application().to_dict()
         apps_to_delete = []
         apps_to_add = []
 

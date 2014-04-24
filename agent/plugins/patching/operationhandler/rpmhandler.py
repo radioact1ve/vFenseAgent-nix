@@ -7,10 +7,10 @@ import subprocess
 from serveroperation.sofoperation import *
 from src.utils import logger, updater, utilcmds
 
-from rv.data.application import CreateApplication
-from rv.rvsofoperation import InstallResult, UninstallResult, RvOperationKey
-from rv.distro.redhat import yum
-from rv.distro.redhat.yum.repos import RepoData, get_primary_file
+from patching.data.application import AppUtils
+from patching.patchingsofoperation import InstallResult, UninstallResult, PatchingOperationKey
+from patching.distro.redhat import yum
+from patching.distro.redhat.yum.repos import RepoData, get_primary_file
 
 
 class RpmOpHandler():
@@ -36,11 +36,13 @@ class RpmOpHandler():
 
         apps_to_delete = []
         for app in difference:
-            root = {}
-            root['name'] = app.name
-            root['version'] = app.version
+            app_delete_dict = {
+                'name': app.name,
+                'version': app.version,
+                'app_id': AppUtils.generate_app_id(app.name, app.version)
+            }
 
-            apps_to_delete.append(root)
+            apps_to_delete.append(app_delete_dict)
 
         return apps_to_delete
 
@@ -77,7 +79,7 @@ class RpmOpHandler():
             if app.name == name:
                 return app
 
-        return CreateApplication.null_application()
+        return AppUtils.null_application()
 
     def _yum_local_update(self, package_name, packages_dir, proc_niceness):
         logger.debug('Installing {0}'.format(package_name))
@@ -121,7 +123,7 @@ class RpmOpHandler():
         success = 'false'
         error = ''
         restart = 'false'
-        app_encoding = CreateApplication.null_application().to_dict()
+        app_encoding = AppUtils.null_application().to_dict()
         apps_to_delete = []
         apps_to_add = []
 
@@ -389,12 +391,11 @@ class RpmOpHandler():
             if dep.release:
                 version = '{0}-{1}'.format(version, dep.release)
 
-            dep_dict = {}
-            dep_dict['name'] = dep.name
-            dep_dict['version'] = version
-            dep_dict['app_id'] = hashlib.sha256("{0}{1}".format(
-                dep.name, dep.version)
-            ).hexdigest()
+            dep_dict = {
+                'name': dep.name,
+                'version': version,
+                'app_id': AppUtils.generate_app_id(dep.name, dep.version)
+            }
 
             # TODO: find a solution. Getting duplicates of package
             # just different architecture. Should we only be listing one?
@@ -498,7 +499,7 @@ class RpmOpHandler():
                                 mp.arch
                             )
 
-                            application = CreateApplication.create(
+                            application = AppUtils.create_app(
                                 mp.name,
                                 mp.complete_version,
                                 mp.description,  # description
@@ -623,7 +624,7 @@ class RpmOpHandler():
                         description = description[0:-1]
                     #######################
 
-                    application = CreateApplication.create(
+                    application = AppUtils.create_app(
                         name,  # app name
                         app_info[RpmQueryInfo.Version],  # app version
                         description,  # app description
@@ -709,11 +710,11 @@ class RpmOpHandler():
             file_size = ''
 
         main = {
-            RvOperationKey.FileName: file_name,
-            RvOperationKey.FileUri: file_uri,
-            RvOperationKey.FileHash: main_package.hash,
-            RvOperationKey.FileSize: file_size,
-            #RvOperationKey.PackageType: 'primary'
+            PatchingOperationKey.FileName: file_name,
+            PatchingOperationKey.FileUri: file_uri,
+            PatchingOperationKey.FileHash: main_package.hash,
+            PatchingOperationKey.FileSize: file_size,
+            #PatchingOperationKey.PackageType: 'primary'
         }
 
         file_data.append(main)
@@ -743,11 +744,11 @@ class RpmOpHandler():
         #                    r = repo_data.get_repo(dep.repo)
 
         #                    f = {
-        #                        RvOperationKey.FileUri: os.path.join(
+        #                        PatchingOperationKey.FileUri: os.path.join(
         #                            r.url, mp.location
         #                        ),
-        #                        RvOperationKey.FileHash: main_package.hash,
-        #                        #RvOperationKey.PackageType: 'dependency'
+        #                        PatchingOperationKey.FileHash: main_package.hash,
+        #                        #PatchingOperationKey.PackageType: 'dependency'
         #                    }
 
         #                    dep_files.append(f)

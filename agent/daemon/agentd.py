@@ -7,10 +7,10 @@ import shlex
 import signal
 import subprocess
 
-PIDFILE = '/tmp/toppatch_agent.pid'
-PATH='/opt/TopPatch/agent/'
-TOPPATCHAGENT = 'agent.py'
-PROGRAM = '/opt/TopPatch/agent/bin/python'
+PIDFILE = '/tmp/vfense_agent.pid'
+PATH='/opt/vFense/agent/'
+VFENSEAGENT = 'agent.py'
+PROGRAM = '/opt/vFense/agent/bin/python'
 
 # Return codes
 # If changes are made here, please update them in:
@@ -40,7 +40,7 @@ def handler(signum, frame):
     print "returning back to terminal"
 
 
-def TopPatchAgent_start():
+def vFenseAgent_start():
     pids = []
     if os.path.isfile(PIDFILE):
         pf = file(PIDFILE, 'r')
@@ -53,32 +53,32 @@ def TopPatchAgent_start():
 
         if p.stdout.read() == '':
             os.remove(PIDFILE)
-            TopPatchAgent_start()
+            vFenseAgent_start()
         else:
             count = 0
             for pid in pid_no:
                 if pid:
                     count += 1
             if count == len(pid_no):
-                message = "TopPatch Agent is already running. Pid: %s(%s)\n" %\
+                message = "vFense Agent is already running. Pid: %s(%s)\n" %\
                           (pids, PIDFILE)
 
                 sys.stderr.write(message)
                 sys.exit(AGENT_ALREADY_RUNNING)
     else:
         os.chdir(PATH)
-        pid = run(PROGRAM, TOPPATCHAGENT)
+        pid = run(PROGRAM, VFENSEAGENT)
         pids.append(pid)
         time.sleep(1)
         file(PIDFILE, 'w+').write("%s\n" % pids)
         signal.signal(signal.SIGINT, handler)
         time.sleep(5)
-        print 'TopPatch Agent is running.'
+        print 'vFense Agent is running.'
 
 
-def TopPatchAgent_stop():
+def vFenseAgent_stop():
     if not os.path.isfile(PIDFILE):
-        message = "TopPatch Agent is not running.\n"
+        message = "vFense Agent is not running.\n"
         sys.stderr.write(message)
         sys.exit(AGENT_ALREADY_STOPPED)
         
@@ -96,7 +96,7 @@ def TopPatchAgent_stop():
             time.sleep(2)
             os.remove(PIDFILE)
 
-            print 'TopPatch Agent has been stopped.'
+            print 'vFense Agent has been stopped.'
 
         except OSError as e:
             print 'PID exist but not process. Removing.'
@@ -110,19 +110,19 @@ def TopPatchAgent_stop():
 
 
 
-def TopPatchAgent_restart():
-    TopPatchAgent_stop()
+def vFenseAgent_restart():
+    vFenseAgent_stop()
     print "\n"
-    TopPatchAgent_start()
+    vFenseAgent_start()
 
-def TopPatchAgent_status():
+def vFenseAgent_status():
     if os.path.isfile(PIDFILE):
-        message = "TopPatch Agent is running. PIDFILE: '%s'\n"
+        message = "vFense Agent is running. PIDFILE: '%s'\n"
         sys.stderr.write(message % PIDFILE)
         # logger.info(message % PIDFILE)
         sys.exit(AGENT_ALREADY_RUNNING)
     else:
-        print "TopPatch Agent is not running."
+        print "vFense Agent is not running."
         sys.exit(AGENT_ALREADY_STOPPED)
 
 ACTIONS = sys.argv[1]
@@ -130,13 +130,13 @@ ACTIONS = sys.argv[1]
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         if ACTIONS == 'start':
-            TopPatchAgent_start()
+            vFenseAgent_start()
         elif ACTIONS == 'stop':
-            TopPatchAgent_stop()
+            vFenseAgent_stop()
         elif ACTIONS == 'restart':
-            TopPatchAgent_restart()
+            vFenseAgent_restart()
         elif ACTIONS == 'status':
-            TopPatchAgent_status()
+            vFenseAgent_status()
         else:
             print "Unknown option: %s" % ACTIONS
             sys.exit(UNKNOWN_OPTION)

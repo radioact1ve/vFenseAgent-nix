@@ -6,8 +6,8 @@ import hashlib
 
 from src.utils import settings, logger, utilcmds, updater
 from datetime import datetime
-from rv.data.application import CreateApplication
-from rv.rvsofoperation import RvError, InstallResult, UninstallResult, \
+from patching.data.application import AppUtils
+from patching.patchingsofoperation import PatchingError, InstallResult, UninstallResult, \
     CpuPriority
 
 
@@ -216,7 +216,7 @@ class DebianHandler():
                 package_dictionary.get(PkgDictValues.description_en, '')
 
         application = \
-            CreateApplication.create(
+            AppUtils.create_app(
                 app_name,
                 package_dictionary.get(PkgDictValues.version, ''),
                 description,
@@ -495,13 +495,13 @@ class DebianHandler():
             dependencies = [dep for dep in dependencies if dep[0] != name]
 
             for dep in dependencies:
-                root = {}
-                root['name'] = dep[0]
-                root['version'] = dep[1]
-                root['app_id'] = \
-                    hashlib.sha256("{0}{1}".format(dep[0], dep[1])).hexdigest()
+                dep_dict = {
+                    'name': dep[0],
+                    'version': dep[1],
+                    'app_id': AppUtils.generate_app_id(dep[0], dep[1])
+                }
 
-                dep_list.append(root)
+                dep_list.append(dep_dict)
 
         return dep_list
 
@@ -572,7 +572,7 @@ class DebianHandler():
         return apps
 
     def get_installed_updates(self):
-        """rvplugin calls this function, but only meant for Mac."""
+        """patchingplugin calls this function, but only meant for Mac."""
         return []
 
     def _get_installed_app(self, name):
@@ -580,7 +580,7 @@ class DebianHandler():
         pkg_dict = installed_packages.get(name, {})
 
         if not pkg_dict:
-            return CreateApplication.null_application()
+            return AppUtils.null_application()
 
         return self._create_app_from_dict(pkg_dict)
 
@@ -649,8 +649,11 @@ class DebianHandler():
             result, err = self.utilcmds.run_command(install_command)
 
             if err:
+                err_lower = err.lower()
                 # Catch non-error related messages
-                if 'reading changelogs' in err.lower():
+                if 'reading changelogs' in err_lower:
+                    pass
+                elif 'dpkg-preconfigure: unable to re-open stdin' in err_lower:
                     pass
                 else:
                     raise Exception(err)
@@ -707,11 +710,13 @@ class DebianHandler():
 
         apps_to_delete = []
         for app in difference:
-            root = {}
-            root['name'] = app.name
-            root['version'] = app.version
+            app_delete_dict = {
+                'name': app.name,
+                'version': app.version,
+                'app_id': AppUtils.generate_app_id(app.name, app.version)
+            }
 
-            apps_to_delete.append(root)
+            apps_to_delete.append(app_delete_dict)
 
         return apps_to_delete
 
@@ -746,9 +751,9 @@ class DebianHandler():
         old_install_list = self.get_installed_applications()
 
         success = 'false'
-        error = RvError.UpdatesNotFound
+        error = PatchingError.UpdatesNotFound
         restart = 'false'
-        app_encoding = CreateApplication.null_application().to_dict()
+        app_encoding = AppUtils.null_application().to_dict()
         apps_to_delete = []
         apps_to_add = []
 

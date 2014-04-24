@@ -7,7 +7,7 @@ def get_current_uptime():
     """Gets the current uptime in seconds.
 
     Returns:
-        (long) The uptime in seconds.
+        (int) The uptime in seconds.
     """
 
     cmd = ['/usr/sbin/sysctl', 'kern.boottime']

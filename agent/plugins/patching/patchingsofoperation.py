@@ -6,7 +6,7 @@ from serveroperation.sofoperation import SofOperation, OperationError
 from src.utils import logger
 
 
-class RvOperationValue():
+class PatchingOperationValue():
     # The corresponding SOF equivalent. (Case sensitive)
     InstallUpdate = 'install_os_apps'
     InstallSupportedApps = 'install_supported_apps'
@@ -33,7 +33,7 @@ class RvOperationValue():
     ForcedRestart = 'force'
 
 
-class RvOperationKey():
+class PatchingOperationKey():
     # The corresponding SOF equivalent. (Case sensitive)
     Uri = 'uri'
     Uris = 'app_uris'
@@ -55,7 +55,7 @@ class RvOperationKey():
     FileSize = 'file_size'
 
 
-class RvError(OperationError):
+class PatchingError(OperationError):
 
     UpdateNotFound = 'Update not found.'
     UpdatesNotFound = 'No updates found.'
@@ -135,12 +135,13 @@ class UninstallData():
         self.cli_options = ""
 
 
-class RvSofOperation(SofOperation):
+class PatchingSofOperation(SofOperation):
 
     def __init__(self, message=None):
-        super(RvSofOperation, self).__init__(message)
+        super(PatchingSofOperation, self).__init__(message)
 
-        # TODO: Fix hack. Lazy to use rvplugin module because of circular deps.
+        # TODO: Fix hack. Lazy to use patchingplugin module because of circular deps.
+        # TODO: switch to patching
         self.plugin = 'rv'
 
         self.applications = []
@@ -148,25 +149,26 @@ class RvSofOperation(SofOperation):
         if self.json_message:
             self.cpu_priority = self._get_cpu_priority()
             self.net_throttle = self.json_message.get(
-                RvOperationKey.NetThrottle, 0
+                PatchingOperationKey.NetThrottle, 0
             )
 
-        if self.type in RvOperationValue.InstallOperations:
+        if self.type in PatchingOperationValue.InstallOperations:
             self.install_data_list = self._load_install_data()
             self.restart = self.json_message.get(
-                RvOperationKey.Restart, RvOperationValue.IgnoredRestart
+                PatchingOperationKey.Restart,
+                PatchingOperationValue.IgnoredRestart
             )
 
-        elif self.type == RvOperationValue.Uninstall:
+        elif self.type == PatchingOperationValue.Uninstall:
             self.uninstall_data_list = self._load_uninstall_data()
 
-        elif self.type == RvOperationValue.ThirdPartyInstall:
-            self.cli_options = self.json_message[RvOperationKey.CliOptions]
-            self.package_urn = self.json_message[RvOperationKey.Uris]
+        elif self.type == PatchingOperationValue.ThirdPartyInstall:
+            self.cli_options = self.json_message[PatchingOperationKey.CliOptions]
+            self.package_urn = self.json_message[PatchingOperationKey.Uris]
 
     def _get_cpu_priority(self):
         return self.json_message.get(
-            RvOperationKey.CpuThrottle, CpuPriority.Normal
+            PatchingOperationKey.CpuThrottle, CpuPriority.Normal
         )
 
     def _load_install_data(self):
@@ -179,8 +181,8 @@ class RvSofOperation(SofOperation):
 
         install_data_list = []
 
-        if RvOperationKey.FileData in self.json_message:
-            data_list = self.json_message[RvOperationKey.FileData]
+        if PatchingOperationKey.FileData in self.json_message:
+            data_list = self.json_message[PatchingOperationKey.FileData]
         else:
             data_list = []
 
@@ -190,16 +192,16 @@ class RvSofOperation(SofOperation):
 
                 install_data = InstallData()
 
-                install_data.name = data[RvOperationKey.Name]
-                install_data.id = data[RvOperationKey.AppId]
+                install_data.name = data[PatchingOperationKey.Name]
+                install_data.id = data[PatchingOperationKey.AppId]
                 install_data.cli_options = \
-                    data.get(RvOperationKey.CliOptions, '')
+                    data.get(PatchingOperationKey.CliOptions, '')
                 install_data.proc_niceness = \
                     CpuPriority.get_niceness(self._get_cpu_priority())
 
-                if RvOperationKey.Uris in data:
+                if PatchingOperationKey.Uris in data:
 
-                    install_data.uris = data[RvOperationKey.Uris]
+                    install_data.uris = data[PatchingOperationKey.Uris]
 
                 install_data_list.append(install_data)
 
@@ -223,8 +225,8 @@ class RvSofOperation(SofOperation):
 
         try:
 
-            if RvOperationKey.FileData in self.json_message:
-                data_list = self.json_message[RvOperationKey.FileData]
+            if PatchingOperationKey.FileData in self.json_message:
+                data_list = self.json_message[PatchingOperationKey.FileData]
 
             else:
                 data_list = []
@@ -232,8 +234,8 @@ class RvSofOperation(SofOperation):
             for data in data_list:
                 uninstall_data = UninstallData()
 
-                uninstall_data.name = data[RvOperationKey.Name]
-                uninstall_data.id = data[RvOperationKey.AppId]
+                uninstall_data.name = data[PatchingOperationKey.Name]
+                uninstall_data.id = data[PatchingOperationKey.AppId]
 
                 uninstall_data_list.append(uninstall_data)
 
@@ -245,10 +247,10 @@ class RvSofOperation(SofOperation):
         return uninstall_data_list
 
     def is_savable(self):
-        if not super(RvSofOperation, self).is_savable():
+        if not super(PatchingSofOperation, self).is_savable():
             return False
 
-        non_savable = [RvOperationValue.RefreshApps]
+        non_savable = [PatchingOperationValue.RefreshApps]
 
         if self.type in non_savable:
             return False
@@ -268,7 +270,7 @@ UninstallResult = namedtuple(
 )
 
 
-class RvSofResult():
+class PatchingSofResult():
     """ Data structure for install/uninstall operation results. """
 
     def __init__(self, operation_id, operation_type, app_id, apps_to_delete,

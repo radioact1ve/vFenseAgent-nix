@@ -39,7 +39,6 @@ class OperationKey():
     Reboot = 'reboot'
     Rebooted = 'rebooted'
     VendorId = 'vendor_id'
-    RvId = 'id'
     CustomerName = 'customer_name'
     Message = 'message'
 
@@ -243,9 +242,10 @@ class SofResult():
     """
     Data structure to pass around operation results.
     """
-    def __init__(self, rv_id='', successful=False, restart=False, message=''):
+    def __init__(self, operation_id='', successful=False, restart=False,
+                 message=''):
 
-        self.id = rv_id
+        self.id = operation_id
         self.successful = successful
         self.restart = restart
         self.specific_message = message

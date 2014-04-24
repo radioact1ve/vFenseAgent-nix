@@ -8,8 +8,8 @@ from ConfigParser import ConfigParser
 from src.utils import logger
 from src.utils import settings
 
-from rv.distro.redhat import yum
-from rv.distro.redhat.yum import MetaPackage, Repo
+from patching.distro.redhat import yum
+from patching.distro.redhat.yum import MetaPackage, Repo
 
 
 class RepoData():

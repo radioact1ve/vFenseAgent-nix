@@ -1,13 +1,12 @@
 """
-Module to manage everything and anything with RV supported third party
+Module to manage everything and anything with Patching supported third party
 applications. Fun!
 """
 import os
 import subprocess
 
 from src.utils import logger
-from rv.data.application import Application
-from rv.data.application import CreateApplication
+from patching.data.application import Application, AppUtils
 
 
 class ThirdPartyManager():
@@ -30,7 +29,7 @@ class ThirdPartyManager():
         JRE7_root_path = '/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/'
         JRE7_command = os.path.join(JRE7_root_path, 'Contents/Home/bin/java')
 
-        application = CreateApplication.null_application()
+        application = AppUtils.null_application()
 
         try:
 
@@ -84,7 +83,7 @@ class ThirdPartyManager():
 
                     app_install_date = None
 
-                application = CreateApplication.create(
+                application = AppUtils.create_app(
                     app_name,
                     app_version,
                     '',  # description
